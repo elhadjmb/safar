@@ -1,4 +1,5 @@
-import logic
+from logic import *
+
 
 def main():
     """
@@ -24,6 +25,7 @@ def main():
                     stop_video_sequence(current_processes, should_run)
                     current_processes = []
                     display_black_screen()
+
 
 if __name__ == "__main__":
     main()
