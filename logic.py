@@ -11,6 +11,10 @@ class Monitor:
         self.screen = None
         self.setup_monitor()
 
+    @staticmethod
+    def get_monitors():
+        return get_monitors()
+
     def setup_monitor(self):
         monitors = get_monitors()
         if self.monitor_number >= len(monitors):

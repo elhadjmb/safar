@@ -3,6 +3,9 @@ from tkinter import filedialog, messagebox
 import json
 import os
 
+from logic import Monitor
+
+
 class VideoSequenceConfigurator:
     def __init__(self, root):
         self.root = root
@@ -64,5 +67,4 @@ class VideoSequenceConfigurator:
 
     @staticmethod
     def get_monitors():
-        # TODO:replace with actual monitor detection logic
-        return [0, 1]  # Assuming two monitors
+        return Monitor.get_monitors()
