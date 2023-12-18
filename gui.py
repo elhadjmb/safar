@@ -38,6 +38,10 @@ class VideoSequenceConfigurator:
                                              command=self.confirm_save_configuration)
         self.save_config_button.pack(pady=10)
 
+        self.load_config_button = ttk.Button(self.root, text="Load Configuration",
+                                             command=self.load_and_display_configuration)
+        self.load_config_button.pack(pady=10)
+
     def add_video_sequence(self):
         sequence_id = len(self.config["sequences"]) + 1
         sequence_key = str(sequence_id)
@@ -101,3 +105,37 @@ class VideoSequenceConfigurator:
     @staticmethod
     def get_monitors():
         return Monitor.get_monitors()
+
+    def load_and_display_configuration(self):
+        if os.path.exists('config.json'):
+            with open('config.json', 'r') as config_file:
+                self.config = json.load(config_file)
+            self.display_loaded_configuration()
+        else:
+            messagebox.showinfo("Load Configuration", "No saved configuration found.")
+
+    def display_loaded_configuration(self):
+        for sequence_key, videos in self.config["sequences"].items():
+            self.add_loaded_sequence(sequence_key, videos)
+
+    def add_loaded_sequence(self, sequence_key, videos):
+        sequence_id = sequence_key
+        sequence_frame = ttk.LabelFrame(self.sequence_frame, text=f"Sequence {sequence_id}", padx=10, pady=10)
+        sequence_frame.pack(padx=10, pady=5, fill="x", expand=True)
+
+        for monitor_num, video_path in enumerate(videos):
+            monitor_frame = ttk.Frame(sequence_frame)
+            monitor_frame.pack(padx=10, pady=5, fill="x", expand=True)
+
+            file_label = ttk.Label(monitor_frame,
+                                   text=os.path.basename(video_path) if video_path else "No file selected", width=40)
+            file_label.pack(side="left", padx=10)
+
+        # Add hotkey entry if exists in config
+        hotkey = [k for k, v in self.config["hotkeys"].items() if v == sequence_key]
+        hotkey_label = ttk.Label(sequence_frame, text="Hotkey:")
+        hotkey_label.pack(side="left", padx=5)
+        hotkey_entry = ttk.Entry(sequence_frame)
+        hotkey_entry.insert(0, hotkey[0] if hotkey else "")
+        hotkey_entry.pack(side="left", padx=5)
+
