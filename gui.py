@@ -70,9 +70,28 @@ class VideoSequenceConfigurator:
 
         hotkey_label = ttk.Label(hotkey_frame, text="Hotkey:")
         hotkey_label.pack(side="left", padx=5)
-        hotkey_entry = ttk.Entry(hotkey_frame)
-        hotkey_entry.pack(side="left", padx=5)
-        hotkey_entry.bind("<Return>", lambda event, sk=sequence_key: self.set_hotkey(sk, hotkey_entry.get()))
+        hotkey_button = ttk.Button(sequence_frame, text="Set Hotkey",
+                                   command=lambda sk=sequence_key: self.capture_hotkey(sk))
+        hotkey_button.pack(side="left", padx=5)
+
+    def capture_hotkey(self, sequence_key):
+        self.hotkey_capture_window = tk.Toplevel(self.root)
+        self.hotkey_capture_window.title("Press a Key for Hotkey")
+        self.hotkey_capture_window.geometry("200x100")
+        tk.Label(self.hotkey_capture_window, text="Press a key...").pack(pady=20)
+        self.hotkey_capture_window.bind("<Key>", lambda event: self.set_hotkey(sequence_key, event))
+
+    def set_hotkey(self, sequence_key, event):
+        hotkey = event.keysym
+        if hotkey in self.config["hotkeys"] and self.config["hotkeys"][hotkey] != sequence_key:
+            messagebox.showerror("Error",
+                                 f"The hotkey '{hotkey}' is already assigned to Sequence {self.config['hotkeys'][hotkey]}.")
+            self.hotkey_capture_window.destroy()
+            return
+
+        self.config["hotkeys"][hotkey] = sequence_key
+        messagebox.showinfo("Hotkey Set", f"Hotkey for Sequence {sequence_key} set to '{hotkey}'.")
+        self.hotkey_capture_window.destroy()
 
     def select_video_file(self, sequence_key, monitor_num):
         filepath = filedialog.askopenfilename(title="Select Video File", filetypes=[("Video Files", "*.mp4;*.avi")])
