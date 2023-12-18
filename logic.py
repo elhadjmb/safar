@@ -1,12 +1,12 @@
-import cv2
-import pygame
-import sys
-from screeninfo import get_monitors
 from multiprocessing import Process
 
-def play_video_on_monitor(video_path, monitor_number):
-    pygame.init()
+import cv2
+import pygame
+from screeninfo import get_monitors
 
+
+def play_video_on_monitor(video_path, monitor_number, should_run):
+    pygame.init()
 
     monitors = get_monitors()
     if monitor_number >= len(monitors):
@@ -19,10 +19,11 @@ def play_video_on_monitor(video_path, monitor_number):
     if not cap.isOpened():
         raise IOError(f"Cannot open video file {video_path}")
 
-    while True:
+    while should_run.value:
         ret, frame = cap.read()
         if not ret:
-            break
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)  # Restart the video
+            continue
 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -31,13 +32,17 @@ def play_video_on_monitor(video_path, monitor_number):
 
         pygame.display.update()
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                cap.release()
-                pygame.quit()
-                sys.exit()
+    cap.release()
+    pygame.quit()
 
-def start_video_playback(video_path, monitor_number):
-    p = Process(target=play_video_on_monitor, args=(video_path, monitor_number))
-    p.start()
-    return p
+
+def start_video_sequence(videos, should_run):
+    processes = []
+
+    for monitor_number, video_path in enumerate(videos):
+        should_run.value = True
+        p = Process(target=play_video_on_monitor, args=(video_path, monitor_number, should_run))
+        p.start()
+        processes.append(p)
+
+    return processes
