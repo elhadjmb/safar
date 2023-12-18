@@ -1,6 +1,13 @@
-from logic import play_video
+from logic import start_video_playback
 
 if __name__ == "__main__":
-    video_path = "path_to_your_video.mp4"  # Replace with your video path
-    monitor_number = 1  # Replace with your target monitor number (0, 1, 2, ...)
-    play_video(video_path, monitor_number)
+    videos = ["video1.mp4", "video2.mp4"]
+    processes = []
+
+    for i, video in enumerate(videos):
+        process = start_video_playback(video, i)
+        processes.append(process)
+
+    for process in processes:
+        process.join()
+
