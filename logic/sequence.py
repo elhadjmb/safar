@@ -1,5 +1,7 @@
 from multiprocessing import Process
 
+import cv2
+
 from .monitor import Monitor
 
 
@@ -50,9 +52,30 @@ class Sequence:
             video (Video): The video to be played.
             monitor (Monitor): The monitor on which to play the video.
         """
-        # TODO: This method will handle the video playback on a specific monitor.
-        # It may involve setting the monitor as the target display for the video and handling video controls.
-        pass
+        cap = cv2.VideoCapture(video.path)
+        if not cap.isOpened():
+            print(f"Error opening video file: {video.path}")
+            return
+
+        # Move the window to the monitor.
+        window_name = f"Video on Monitor {monitor.number}"
+        cv2.namedWindow(window_name, cv2.WND_PROP_FULLSCREEN)
+        cv2.moveWindow(window_name, monitor.x, monitor.y)
+        cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            cv2.imshow(window_name, frame)
+
+            # Check for 'q' key to stop playback
+            if cv2.waitKey(25) & 0xFF == ord('q'):
+                break
+
+        cap.release()
+        cv2.destroyAllWindows()
 
     def stop(self):
         """
