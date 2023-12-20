@@ -32,8 +32,13 @@ class Video:
 
     def _play_video(self):
         """
-        Internal method to handle video playback.
+        Internal method to handle video playback in fullscreen.
         """
+
+        # Creating a window and setting it to fullscreen
+        cv2.namedWindow("Video", cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty("Video", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
         while self.is_playing:
             ret, frame = self.cap.read()
             if not ret:
