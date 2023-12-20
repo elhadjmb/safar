@@ -1,31 +1,37 @@
-from gui import VideoSequenceConfigurator
-import tkinter as tk
-from logic import Application
+from logic import Player
 
 
-def main(gui=True):
-    """
-    Main function to control video playback based on user input.
-    """
-    if gui:
-        root = tk.Tk()
-        app = VideoSequenceConfigurator(root)
-        app.load_configuration()
-        root.mainloop()
+def main():
+    player = Player()
 
-        # After closing the GUI, run the application with the saved configuration
-        if app.config:  # Check if configuration exists
-            application = Application(app.config)
-            application.run()
+    while True:
+        print("\nMenu:")
+        print("1. Setup Monitors")
+        print("2. Setup Videos")
+        print("3. Create Sequences")
+        print("4. Start a Sequence")
+        print("5. Stop a Sequence")
+        print("6. Exit")
 
-        return
-    sequences = {
-        '1': ["path_to_video_sequence1_monitor1.mp4", "path_to_video_sequence1_monitor2.mp4"],
-        '2': ["path_to_video_sequence2_monitor1.mp4", "path_to_video_sequence2_monitor2.mp4"],
-        # Add more sequences as needed
-    }
-    app = Application(sequences)
-    app.run()
+        choice = input("Enter your choice: ")
+
+        if choice == '1':
+            player.setup_monitors()
+        elif choice == '2':
+            player.setup_videos()
+        elif choice == '3':
+            player.create_sequences()
+        elif choice == '4':
+            sequence_id = int(input("Enter the sequence ID to start: "))
+            player.start_sequence(sequence_id)
+        elif choice == '5':
+            sequence_id = int(input("Enter the sequence ID to stop: "))
+            player.stop_sequence(sequence_id)
+        elif choice == '6':
+            print("Exiting the program.")
+            break
+        else:
+            print("Invalid choice. Please try again.")
 
 
 if __name__ == "__main__":
