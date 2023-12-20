@@ -1,49 +1,26 @@
-import screeninfo
+from screeninfo import get_monitors
 
 class Monitor:
     """
-    Represents a monitor display.
+    Represents a computer monitor, providing necessary details for video playback.
 
     Attributes:
-        number (int): The monitor number.
-        info (screeninfo.Monitor): Detailed information about the monitor.
+        index (int): The index of the monitor in the system's monitor list.
+        width (int): Width of the monitor in pixels.
+        height (int): Height of the monitor in pixels.
+        x (int): The X-coordinate of the top-left corner of the monitor.
+        y (int): The Y-coordinate of the top-left corner of the monitor.
     """
 
-    def __init__(self, number):
-        """
-        Initialize a Monitor instance.
+    def __init__(self, select_index=0):
+        monitors = get_monitors()
+        if select_index >= len(monitors):
+            raise ValueError("Selected monitor index is out of range.")
 
-        Args:
-            number (int): The monitor number.
-
-        Raises:
-            ValueError: If the specified monitor number does not exist.
-        """
-        self.number = number
-        self.info = self._get_monitor_info()
-
-        if not self.info:
-            raise ValueError(f"Monitor number {number} does not exist.")
-
-    @staticmethod
-    def get_monitors():
-        """
-        Get available monitors.
-
-        Returns:
-            List[screeninfo.Monitor]: A list of available monitors.
-        """
-        return screeninfo.get_monitors()
-
-    def _get_monitor_info(self):
-        """
-        Retrieve information for the specified monitor.
-
-        Returns:
-            screeninfo.Monitor: Information about the specified monitor, or None if not found.
-        """
-        monitors = Monitor.get_monitors()
-        for monitor in monitors:
-            if monitor.number == self.number:
-                return monitor
-        return None
+        selected_monitor = monitors[select_index]
+        self.index = select_index
+        self.width = selected_monitor.width
+        self.height = selected_monitor.height
+        self.x = selected_monitor.x
+        self.y = selected_monitor.y
+        self.name = selected_monitor.name
