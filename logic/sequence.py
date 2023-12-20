@@ -1,4 +1,4 @@
-from multiprocessing import Process
+import threading
 
 from . import Video
 from .monitor import Monitor
@@ -14,7 +14,7 @@ class Sequence:
 
     def __init__(self, videos):
         self.videos = videos
-        self.processes = []
+        self.threads = []
 
         if not videos:
             # If no videos are specified, map black screens to all monitors.
@@ -23,9 +23,9 @@ class Sequence:
     def start(self):
         """Start playing the sequence of videos on respective monitors."""
         for video, monitor in self.videos:
-            process = Process(target=self._play_video, args=(video))
-            process.start()
-            self.processes.append(process)
+            thread = threading.Thread(target=self._play_video, args=(video, monitor))
+            thread.start()
+            self.threads.append(thread)
 
     def _play_video(self, video):
         """Helper method to play a video on a given monitor."""
@@ -33,12 +33,19 @@ class Sequence:
 
     def stop(self):
         """Stop all videos in the sequence."""
-        for process in self.processes:
-            process.terminate()
-        self.processes.clear()
+        for video, _ in self.videos:
+            video.stop()
+        for thread in self.threads:
+            thread.join()
+        self.threads.clear()
 
     def _add_blackscreens(self):
         monitors = Monitor.detect_monitors()
         for monitor in monitors:
             black_screen = Video(path=None, monitor=monitor)
             self.videos.append(black_screen)
+
+    def freeze(self):
+        """Pause all videos in the sequence."""
+        for video, _ in self.videos:
+            video.pause()
