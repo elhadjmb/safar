@@ -26,7 +26,7 @@ class Monitor:
             raise ValueError(f"Monitor number {number} does not exist.")
 
     @staticmethod
-    def _get_monitors():
+    def get_monitors():
         """
         Get available monitors.
 
@@ -42,7 +42,7 @@ class Monitor:
         Returns:
             screeninfo.Monitor: Information about the specified monitor, or None if not found.
         """
-        monitors = Monitor._get_monitors()
+        monitors = Monitor.get_monitors()
         for monitor in monitors:
             if monitor.number == self.number:
                 return monitor
