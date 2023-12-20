@@ -1,77 +1,50 @@
 import cv2
-import threading
 
 
 class Video:
     """
-    Represents a video file.
+    Represents a video, capable of playing, pausing, and stopping the video on a specified monitor.
 
     Attributes:
         path (str): Path to the video file.
-        cap (cv2.VideoCapture): OpenCV VideoCapture object.
-        is_playing (bool): Flag to indicate if the video is currently playing.
-        lock (threading.Lock): Lock for thread-safe operations.
-
-    Methods:
-        play(): Start or resume video playback.
-        pause(): Pause video playback.
-        stop(): Stop video playback and release resources.
     """
 
     def __init__(self, path):
-        """
-        Initialize a Video instance.
-
-        Args:
-            path (str): Path to the video file.
-        """
         self.path = path
-        self.cap = cv2.VideoCapture(path)
+        self.cap = None
         self.is_playing = False
-        self.lock = threading.Lock()
 
-    def _play_video(self):
-        """
-        Internal method to handle video playback in fullscreen.
-        """
+    def play(self, monitor):
+        """Play the video on a specified monitor."""
+        self.cap = cv2.VideoCapture(self.path)
 
-        # Creating a window and setting it to fullscreen
+        # Set the window to the size of the monitor
         cv2.namedWindow("Video", cv2.WND_PROP_FULLSCREEN)
+        cv2.moveWindow("Video", monitor.x, monitor.y)
         cv2.setWindowProperty("Video", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
+        self.is_playing = True
         while self.is_playing:
             ret, frame = self.cap.read()
             if not ret:
                 break
-
             cv2.imshow("Video", frame)
-            cv2.waitKey(1)
 
-        cv2.destroyWindow("Video")
+            # Break the loop if 'q' is pressed
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
-    def play(self):
-        """
-        Start or resume video playback.
-        """
-        with self.lock:
-            if not self.is_playing:
-                self.is_playing = True
-                self.playback_thread = threading.Thread(target=self._play_video)
-                self.playback_thread.start()
+        self.cap.release()
+        cv2.destroyAllWindows()
 
     def pause(self):
-        """
-        Pause video playback.
-        """
-        with self.lock:
-            self.is_playing = False
-            # The playback thread will automatically stop.
+        """Pause the video."""
+        self.is_playing = False
+        self.cap.release()
 
     def stop(self):
-        """
-        Stop video playback and release resources.
-        """
-        with self.lock:
-            self.is_playing = False
+        """Stop the video."""
+        self.is_playing = False
+        if self.cap is not None:
             self.cap.release()
-            cv2.destroyAllWindows()
+        cv2.destroyAllWindows()
