@@ -55,10 +55,11 @@ class Config:
         path (str): Path to the configuration file.
     """
 
-    def __init__(self, path: str = None):
-        self.monitors = []
-        self.videos = []
-        self.sequences = []
+    def __init__(self, path: str = None, monitors: list[Monitor] = None, videos: list[Video] = None,
+                 sequences: list[Sequence] = None):
+        self.monitors = [] if monitors is None else monitors
+        self.videos = [] if videos is None else videos
+        self.sequences = [] if sequences is None else sequences
         self.path = path
 
     def save(self, path):
@@ -193,3 +194,25 @@ class Player:
             self.sequences[sequence_id].stop()
         except IndexError:
             print("Invalid sequence ID.")
+
+    def save_config(self, path):
+        """
+        Save configuration to a file.
+        """
+        config = Config(path, self.monitors, self.videos, self.sequences)
+        config.save(path)
+
+    def load_config(self, path):
+        """
+        Load configuration from a file.
+        """
+        # Ask user to load the configuration
+        choice = input("Load configuration? (y/n): ").lower()
+        if choice == 'y':
+            config = Config()
+            config.load(path)
+            self.monitors = config.monitors
+            self.videos = config.videos
+            self.sequences = config.sequences
+        else:
+            print("Not loading configuration.")
