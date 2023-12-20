@@ -1,10 +1,7 @@
 from multiprocessing import Process
 
-import cv2
-
+from . import Video
 from .monitor import Monitor
-import cv2
-import numpy as np
 
 
 class Sequence:
@@ -43,6 +40,5 @@ class Sequence:
     def _add_blackscreens(self):
         monitors = Monitor.detect_monitors()
         for monitor in monitors:
-            black_screen = BlackScreen()
-            black_screen.monitor = monitor
+            black_screen = Video(path=None, monitor=monitor)
             self.videos.append(black_screen)

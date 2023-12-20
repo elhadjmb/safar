@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 
 class Video:
@@ -9,32 +10,42 @@ class Video:
         path (str): Path to the video file.
     """
 
-    def __init__(self, path):
+    def __init__(self, path, monitor):
         self.path = path
+        self.monitor = monitor
         self.cap = None
         self.is_playing = False
 
-    def play(self, monitor):
-        """Play the video on a specified monitor."""
-        self.cap = cv2.VideoCapture(self.path)
-
-        # Set the window to the size of the monitor
+    def play(self):
+        """Play the video or display a black screen on the specified monitor."""
+        # Setup the window for fullscreen display on the specified monitor
         cv2.namedWindow("Video", cv2.WND_PROP_FULLSCREEN)
-        cv2.moveWindow("Video", monitor.x, monitor.y)
+        cv2.moveWindow("Video", self.monitor.x, self.monitor.y)
         cv2.setWindowProperty("Video", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
         self.is_playing = True
-        while self.is_playing:
-            ret, frame = self.cap.read()
-            if not ret:
-                break
-            cv2.imshow("Video", frame)
+        if self.path:
+            self.cap = cv2.VideoCapture(self.path)
 
-            # Break the loop if 'q' is pressed
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            while self.is_playing:
+                ret, frame = self.cap.read()
+                if not ret:
+                    break
+                cv2.imshow("Video", frame)
 
-        self.cap.release()
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+        else:
+            # Display a black screen if path is None
+            while self.is_playing:
+                black_screen = np.zeros((self.monitor.height, self.monitor.width, 3), dtype=np.uint8)
+                cv2.imshow("Video", black_screen)
+
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+
+        if self.cap:
+            self.cap.release()
         cv2.destroyAllWindows()
 
     def pause(self):
