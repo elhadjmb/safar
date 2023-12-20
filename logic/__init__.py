@@ -1,7 +1,120 @@
+import json
 import os
 from .monitor import Monitor
 from .video import Video
 from .sequence import Sequence
+
+
+class Config:
+    """
+    Manages configuration for the player.
+    Saves and loads configuration to/from a file.
+
+    The file is a JSON file with the following structure:
+    {
+        "monitors": [
+            {
+                "name": "Monitor 1",
+                "info": {
+                    "width": 1920,
+                    "height": 1080,
+                    "x": 0,
+                    "y": 0
+                }
+            },
+            {
+                "name": "Monitor 2",
+                "info": {
+                    "width": 1920,
+                    "height": 1080,
+                    "x": 1920,
+                    "y": 0
+                }
+            }
+        ],
+        "videos": [
+            {
+                "path": "C:\\Users\\User\\Videos\\video1.mp4"
+            },
+            {
+                "path": "C:\\Users\\User\\Videos\\video2.mp4"
+            }
+        ],
+        "sequences": [
+            {
+                "videos": [0, 1],
+                "monitors": [0, 1]
+            }
+        ]
+    }
+
+    Attributes:
+        monitors (List[Monitor]): List of Monitor instances.
+        videos (List[Video]): List of Video instances.
+        sequences (List[Sequence]): List of Sequence instances.
+        path (str): Path to the configuration file.
+    """
+
+    def __init__(self, path: str = None):
+        self.monitors = []
+        self.videos = []
+        self.sequences = []
+        self.path = path
+
+    def save(self, path):
+        """
+        Save configuration to a JSON file from the attributes.
+        """
+        # Create a dictionary from the attributes
+        config_dict = {
+            "monitors": [
+                {
+                    "name": m.name,
+                    "info": {
+                        "width": m.info.width,
+                        "height": m.info.height,
+                        "x": m.info.x,
+                        "y": m.info.y
+                    }
+                } for m in self.monitors
+            ],
+            "videos": [
+                {
+                    "path": v.path
+                } for v in self.videos
+            ],
+            "sequences": [
+                {
+                    "videos": [self.videos.index(v) for v in s.videos],
+                    "monitors": [self.monitors.index(m) for m in s.monitors]
+                } for s in self.sequences
+            ]
+        }
+
+        # Save the dictionary to a JSON file
+        with open(path, 'w') as f:
+            json.dump(config_dict, f, indent=4, default=str)
+
+    def load(self, path):
+        """
+        Load configuration from a file.
+        """
+        with open(path, 'r') as f:
+            config_dict = json.load(f)
+
+        # Load monitors
+        for monitor_dict in config_dict['monitors']:
+            self.monitors.append(Monitor(monitor_dict['name']))
+
+        # Load videos
+        for video_dict in config_dict['videos']:
+            self.videos.append(Video(video_dict['path']))
+
+        # Load sequences
+        for sequence_dict in config_dict['sequences']:
+            sequence_videos = [self.videos[i] for i in sequence_dict['videos']]
+            sequence_monitors = [self.monitors[i] for i in sequence_dict['monitors']]
+            self.sequences.append(Sequence(sequence_videos, sequence_monitors))
 
 
 class Player:
@@ -16,16 +129,18 @@ class Player:
         """
         auto_detect = input("Auto-detect monitors? (y/n): ").lower() == 'y'
         if auto_detect:
-            self.monitors = [Monitor(m.number) for m in Monitor.get_monitors()]
+            self.monitors = [Monitor(m) for m in Monitor.get_monitors()]
         else:
             while True:
                 try:
-                    monitor_number = int(input("Enter monitor number (or -1 to stop): "))
+                    monitor_number = int(input(f"Enter monitor number (or -1 to stop) [Monitors: {}]: "))
                     if monitor_number == -1:
                         break
                     self.monitors.append(Monitor(monitor_number))
                 except ValueError as e:
                     print(f"Error: {e}")
+
+        for monitor in self.monitors:
 
     def setup_videos(self):
         """
