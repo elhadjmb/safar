@@ -16,7 +16,7 @@ class BlackScreen:
         frame_rate (int): Frame rate of the simulated video.
     """
 
-    def __init__(self, duration=10, frame_rate=30):
+    def __init__(self, duration=3600, frame_rate=30):
         """
         Initialize a BlackScreen instance.
 
