@@ -1,5 +1,6 @@
 from screeninfo import get_monitors
 
+
 class Monitor:
     """
     Represents a computer monitor, providing necessary details for video playback.
@@ -24,3 +25,8 @@ class Monitor:
         self.x = selected_monitor.x
         self.y = selected_monitor.y
         self.name = selected_monitor.name
+
+    @staticmethod
+    def detect_monitors():
+        """Return a list of all detected monitors."""
+        return get_monitors()
