@@ -6,6 +6,7 @@ def main():
 
     while True:
         print("\nSteps:")
+        print("0. Preconfigure Monitors and Videos")
         print("1. Setup Monitors")
         print("2. Setup Videos")
         print("3. Create Sequences")
@@ -13,10 +14,11 @@ def main():
         print("5. Stop a Sequence")
         print("6. Exit")
 
+        player.load_config()
         player.setup_monitors()
         player.setup_videos()
         player.create_sequences()
-
+        player.save_config()
         while True:
             sequence_id = int(input("Enter the sequence ID to start: "))
             player.start_sequence(sequence_id)
