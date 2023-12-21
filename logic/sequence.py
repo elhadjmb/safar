@@ -1,8 +1,8 @@
 import random
 import threading
 
-from . import Video
 from .screen import Screen
+from .video import Video
 
 
 class Sequence:

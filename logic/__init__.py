@@ -2,8 +2,7 @@ import json
 import os
 
 from .screen import Screen
-from .sequence import Sequence
-from .video import Video
+from .sequence import Sequence, Video
 
 
 class Config:
@@ -222,7 +221,7 @@ class Player:
         """
         Save configuration to a file.
         """
-        config = Config(self.screens, self.videos, self.sequences)
+        config = Config(self.screens, self.videos, self.sequences, self.key_sequence_map)
         config.save(path)
 
     def load_config(self, path="config.json"):

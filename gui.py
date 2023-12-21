@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 
-from logic import Player
 
 
 class KeyPressGUI:
@@ -71,7 +70,3 @@ class KeyPressGUI:
         self.mapping_display.delete(*self.mapping_display.get_children())  # Clear existing entries
         for key, func in self.key_function_map.items():
             self.mapping_display.insert('', 'end', values=(key, func.__name__))
-
-
-player = Player(headless=True)
-gui = KeyPressGUI(player)
