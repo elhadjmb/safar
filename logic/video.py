@@ -1,3 +1,5 @@
+import random
+
 import cv2
 import numpy as np
 
@@ -10,7 +12,11 @@ class Video:
         path (str): Path to the video file.
     """
 
+    def __repr__(self):
+        return f"Video {self.video_index} ({self.path})"
+
     def __init__(self, path, monitor):
+        self.video_index = random.randint(0, 1_000_000)
         self.is_paused = None
         self.path = path
         self.monitor = monitor
