@@ -15,12 +15,15 @@ def main():
         print("6. Exit")
 
         player.load_config()
-        player.setup_monitors()
-        player.setup_videos()
-        player.create_sequences()
+        if not player.screens:
+            player.setup_screens()
+        if not player.videos:
+            player.setup_videos()
+        if not player.sequences:
+            player.create_sequences()
         player.save_config()
         while True:
-            sequence_id = int(input("Enter the sequence ID to start: "))
+            sequence_id = int(input(f"Enter the sequence ID to start ({player.sequences}): "))
             player.start_sequence(sequence_id)
 
             choice = input("Stop sequence? (y/n/q): ")
