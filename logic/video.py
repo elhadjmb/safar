@@ -33,9 +33,8 @@ class Video:
 
     def play_soft(self):
         """Play the video with fade-in and fade-out effects."""
-        cv2.namedWindow("Video", cv2.WND_PROP_FULLSCREEN)
-        cv2.moveWindow("Video", self.monitor.x, self.monitor.y)
-        cv2.setWindowProperty("Video", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        # Ensure the screen's window is created before displaying the video
+        self.monitor.create_window()
 
         self.is_playing = True
         self.is_paused = False
@@ -53,7 +52,7 @@ class Video:
                     ret, frame = self.cap.read()
                     if not ret:
                         break  # Video finished, now fade out and display black screen
-                    cv2.imshow("Video", frame)
+                    cv2.imshow(self.monitor.window_name, frame)  # Use monitor's window
 
                 if cv2.waitKey(delay) & 0xFF == ord('q'):
                     break
@@ -72,14 +71,15 @@ class Video:
         while alpha <= end_alpha and alpha >= start_alpha:
             fade_frame = np.zeros((self.monitor.height, self.monitor.width, 3), dtype=np.uint8)
             cv2.addWeighted(fade_frame, alpha, fade_frame, 1 - alpha, 0, fade_frame)
-            cv2.imshow("Video", fade_frame)
+            cv2.imshow(self.monitor.window_name, fade_frame)  # Use monitor's window
             alpha += step
             cv2.waitKey(int(1000 / fps))
+
     def display_black_screen(self):
         """Display a black screen indefinitely."""
         while self.is_playing:
             black_screen = np.zeros((self.monitor.height, self.monitor.width, 3), dtype=np.uint8)
-            cv2.imshow("Video", black_screen)
+            cv2.imshow(self.monitor.window_name, black_screen)  # Use monitor's window
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 

@@ -1,3 +1,4 @@
+import cv2
 from screeninfo import get_monitors
 
 
@@ -15,6 +16,7 @@ class Screen:
 
     def __repr__(self):
         return f"Screen {self.select_index} ({self.width}x{self.height})"
+
     def __init__(self, select_index=0):
         monitors = get_monitors()
         if select_index >= len(monitors):
@@ -27,6 +29,28 @@ class Screen:
         self.x = selected_monitor.x
         self.y = selected_monitor.y
         self.name = selected_monitor.name
+
+        # Create a unique window for each monitor
+        self.window_name = f"Screen_{self.select_index}"
+        cv2.namedWindow(self.window_name, cv2.WND_PROP_FULLSCREEN)
+        cv2.moveWindow(self.window_name, self.x, self.y)
+        cv2.setWindowProperty(self.window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+        self.window_created = False
+
+    def create_window(self):
+        """Create the OpenCV window if it hasn't been created already."""
+        if not self.window_created:
+            cv2.namedWindow(self.window_name, cv2.WND_PROP_FULLSCREEN)
+            cv2.moveWindow(self.window_name, self.x, self.y)
+            cv2.setWindowProperty(self.window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            self.window_created = True
+
+    def close_window(self):
+        """Close the OpenCV window."""
+        if self.window_created:
+            cv2.destroyWindow(self.window_name)
+            self.window_created = False
 
     @staticmethod
     def detect_monitors():
