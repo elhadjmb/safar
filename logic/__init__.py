@@ -1,6 +1,6 @@
 import json
 import os
-from .monitor import Monitor
+from .screen import Screen
 from .video import Video
 from .sequence import Sequence
 
@@ -12,136 +12,137 @@ class Config:
 
     The file is a JSON file with the following structure:
     {
-        "monitors": [
+        "screens": [
             {
+                "select_index": 0,
                 "name": "Monitor 1",
-                "info": {
-                    "width": 1920,
-                    "height": 1080,
-                    "x": 0,
-                    "y": 0
-                }
+                "width": 1920,
+                "height": 1080,
+                "x": 0,
+                "y": 0,
             },
-            {
-                "name": "Monitor 2",
-                "info": {
-                    "width": 1920,
-                    "height": 1080,
-                    "x": 1920,
-                    "y": 0
-                }
-            }
+            ...
         ],
         "videos": [
             {
-                "path": "C:\\Users\\User\\Videos\\video1.mp4"
+                "video_index": 0,
+                "path": "path/to/video.mp4",
+                "monitor": 0,
             },
-            {
-                "path": "C:\\Users\\User\\Videos\\video2.mp4"
-            }
+            ...
         ],
         "sequences": [
             {
-                "videos": [0, 1],
-                "monitors": [0, 1]
-            }
+                "sequence_index": 0,
+                "videos": [0, 1, 2]
+            },
+            ...
         ]
     }
 
     Attributes:
-        monitors (List[Monitor]): List of Monitor instances.
+        screens (List[Screen]): List of Monitor instances.
         videos (List[Video]): List of Video instances.
         sequences (List[Sequence]): List of Sequence instances.
-        path (str): Path to the configuration file.
     """
 
-    def __init__(self, path: str = None, monitors: list[Monitor] = None, videos: list[Video] = None,
+    def __init__(self, monitors: list[Screen] = None, videos: list[Video] = None,
                  sequences: list[Sequence] = None):
-        self.monitors = [] if monitors is None else monitors
+        self.screens = [] if monitors is None else monitors
         self.videos = [] if videos is None else videos
         self.sequences = [] if sequences is None else sequences
-        self.path = path
 
-    def save(self, path):
+    def make_config_dict(self):
         """
-        Save configuration to a JSON file from the attributes.
+        Make a dictionary from the attributes following the JSON structure.
         """
-        # Create a dictionary from the attributes
         config_dict = {
-            "monitors": [
-                {
-                    "name": m.name,
-                    "info": {
-                        "width": m.info.width,
-                        "height": m.info.height,
-                        "x": m.info.x,
-                        "y": m.info.y
-                    }
-                } for m in self.monitors
-            ],
-            "videos": [
-                {
-                    "path": v.path
-                } for v in self.videos
-            ],
-            "sequences": [
-                {
-                    "videos": [self.videos.index(v) for v in s.videos],
-                    "monitors": [self.monitors.index(m) for m in s.monitors]
-                } for s in self.sequences
-            ]
+            "screens": [],
+            "videos": [],
+            "sequences": []
         }
 
-        # Save the dictionary to a JSON file
-        with open(path, 'w') as f:
-            json.dump(config_dict, f, indent=4, default=str)
+        for screen in self.screens:
+            config_dict["screens"].append({
+                "select_index": screen.select_index,
+                "name": screen.name,
+                "width": screen.width,
+                "height": screen.height,
+                "y": screen.y,
+                "x": screen.x
+            })
 
-    def load(self, path):
+        for video in self.videos:
+            config_dict["videos"].append({
+                "video_index": video.video_index,
+                "path": video.path,
+                "screen": video.monitor.select_index
+            })
+
+        for sequence in self.sequences:
+            config_dict["sequences"].append({
+                "sequence_index": sequence.sequence_index,
+                "videos": [video.video_index for video in sequence.videos]
+            })
+
+        return config_dict
+
+    def save(self, path="config.json"):
         """
-        Load configuration from a file.
+        Save configuration to a JSON file.
         """
+        config_dict = self.make_config_dict()
+        with open(path, 'w') as f:
+            json.dump(config_dict, f, indent=4)
+
+    def load(self, path="config.json"):
+        """
+        Load configuration from a JSON file.
+        """
+
         with open(path, 'r') as f:
             config_dict = json.load(f)
 
-        # Load monitors
-        for monitor_dict in config_dict['monitors']:
-            self.monitors.append(Monitor(monitor_dict['name']))
+        for screen_dict in config_dict["screens"]:
+            self.screens.append(Screen(screen_dict["select_index"]))
 
-        # Load videos
-        for video_dict in config_dict['videos']:
-            self.videos.append(Video(video_dict['path']))
+        for video_dict in config_dict["videos"]:
+            v = Video(video_dict["path"], self.screens[video_dict["screen"]])
+            v.video_index = video_dict["video_index"]
+            self.videos.append(v)
 
-        # Load sequences
-        for sequence_dict in config_dict['sequences']:
-            sequence_videos = [self.videos[i] for i in sequence_dict['videos']]
-            sequence_monitors = [self.monitors[i] for i in sequence_dict['monitors']]
-            self.sequences.append(Sequence(sequence_videos, sequence_monitors))
+        for sequence_dict in config_dict["sequences"]:
+            videos = []
+            for video_index in sequence_dict["videos"]:
+                for video in self.videos:
+                    if video.video_index == video_index:
+                        videos.append(video)
+            self.sequences.append(Sequence(videos))
 
 
 class Player:
     def __init__(self):
-        self.monitors = []
+        self.screens = []
         self.videos = []
         self.sequences = []
 
-    def setup_monitors(self):
+    def setup_screens(self):
         """
-        Set up monitors based on user input or auto-detection.
+        Set up screens based on user input or auto-detection.
         """
-        auto_detect = input("Auto-detect monitors? (y/n): ").lower() == 'y'
+        auto_detect = input("Auto-detect screens? (y/n): ").lower() == 'y'
         if auto_detect:
-            self.monitors = [Monitor(m) for m in Monitor.get_monitors()]
+            self.screens = Screen.detect_monitors()
         else:
             while True:
                 try:
-                    monitor_number = int(input(f"Enter monitor number (or -1 to stop) [Monitors: {}]: "))
+                    monitor_number = int(
+                        input(f"Enter monitor number (or -1 to stop) [Monitors: {Screen.detect_monitors()}]: "))
                     if monitor_number == -1:
                         break
-                    self.monitors.append(Monitor(monitor_number))
+                    self.screens.append(Screen(select_index=monitor_number))
                 except ValueError as e:
                     print(f"Error: {e}")
-
-        for monitor in self.monitors:
 
     def setup_videos(self):
         """
@@ -152,7 +153,8 @@ class Player:
             if video_path.lower() == 'done':
                 break
             elif os.path.exists(video_path):
-                self.videos.append(Video(video_path))
+                monitor_number = int(input(f"Enter monitor number [Screens: {self.screens}]: "))
+                self.videos.append(Video(video_path, monitor=Screen(select_index=monitor_number)))
             else:
                 print("Invalid file path.")
 
@@ -162,8 +164,8 @@ class Player:
         """
         print("Creating sequences. Enter 'done' to finish.")
         while True:
-            video_indices = input("Enter video indices (comma-separated): ")
-            monitor_indices = input("Enter monitor indices (comma-separated): ")
+            video_indices = input(f"Enter video indices (comma-separated) ({self.videos}): ")
+            monitor_indices = input(f"Enter monitor indices (comma-separated) ({self.screens}): ")
 
             if video_indices.lower() == 'done' or monitor_indices.lower() == 'done':
                 break
@@ -172,8 +174,10 @@ class Player:
                 video_indices = [int(v) for v in video_indices.split(',')]
                 monitor_indices = [int(m) for m in monitor_indices.split(',')]
                 sequence_videos = [self.videos[i] for i in video_indices]
-                sequence_monitors = [self.monitors[i] for i in monitor_indices]
-                self.sequences.append(Sequence(sequence_videos, sequence_monitors))
+                sequence_monitors = [self.screens[i] for i in monitor_indices]
+                for video in sequence_videos:
+                    video.monitor = sequence_monitors[sequence_videos.index(video)]
+                self.sequences.append(Sequence(sequence_videos))
             except (IndexError, ValueError) as e:
                 print(f"Error creating sequence: {e}")
 
@@ -195,14 +199,14 @@ class Player:
         except IndexError:
             print("Invalid sequence ID.")
 
-    def save_config(self, path):
+    def save_config(self, path="config.json"):
         """
         Save configuration to a file.
         """
-        config = Config(path, self.monitors, self.videos, self.sequences)
+        config = Config(self.screens, self.videos, self.sequences)
         config.save(path)
 
-    def load_config(self, path):
+    def load_config(self, path="config.json"):
         """
         Load configuration from a file.
         """
@@ -211,7 +215,7 @@ class Player:
         if choice == 'y':
             config = Config()
             config.load(path)
-            self.monitors = config.monitors
+            self.screens = config.screens
             self.videos = config.videos
             self.sequences = config.sequences
         else:
