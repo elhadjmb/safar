@@ -32,10 +32,6 @@ class Screen:
 
         # Create a unique window for each monitor
         self.window_name = f"Screen_{self.select_index}"
-        cv2.namedWindow(self.window_name, cv2.WND_PROP_FULLSCREEN)
-        cv2.moveWindow(self.window_name, self.x, self.y)
-        cv2.setWindowProperty(self.window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-
         self.window_created = False
 
     def create_window(self):

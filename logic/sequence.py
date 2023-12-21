@@ -10,7 +10,7 @@ class Sequence:
     Manages a sequence of videos to be played on different screens.
 
     Attributes:
-        videos (list of tuples): Each tuple contains a Video object and its corresponding Monitor.
+        videos (list of Video): Contains Video objects.
     """
 
     def __repr__(self):
