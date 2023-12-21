@@ -44,6 +44,8 @@ class Video:
         self.is_playing = True
         if self.path:
             self.cap = cv2.VideoCapture(self.path)
+            fps = self.cap.get(cv2.CAP_PROP_FPS)  # Get the video's frame rate
+            delay = int(1000 / fps)  # Calculate the delay for each frame
 
             while self.is_playing:
                 ret, frame = self.cap.read()
@@ -51,7 +53,7 @@ class Video:
                     break
                 cv2.imshow("Video", frame)
 
-                if cv2.waitKey(1) & 0xFF == ord('q'):
+                if cv2.waitKey(delay) & 0xFF == ord('q'):  # Use the calculated delay
                     break
         else:
             # Display a black screen if path is None
@@ -77,6 +79,8 @@ class Video:
         self.is_paused = False
         if self.path:
             self.cap = cv2.VideoCapture(self.path)
+            fps = self.cap.get(cv2.CAP_PROP_FPS)  # Get the video's frame rate
+            delay = int(1000 / fps)  # Calculate the delay for each frame
 
             while self.is_playing:
                 if not self.is_paused:
@@ -85,7 +89,7 @@ class Video:
                         break
                     cv2.imshow("Video", frame)
 
-                if cv2.waitKey(1) & 0xFF == ord('q'):
+                if cv2.waitKey(delay) & 0xFF == ord('q'):  # Use the calculated delay
                     break
         else:
             # Display a black screen if path is None
