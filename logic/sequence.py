@@ -28,7 +28,7 @@ class Sequence:
     def start(self):
         """Start playing the sequence of videos on respective screens."""
         for video in self.videos:
-            thread = threading.Thread(target=self._play_video, args=video)
+            thread = threading.Thread(target=self._play_video, args=(video,))
             thread.start()
             self.threads.append(thread)
 
@@ -38,7 +38,7 @@ class Sequence:
 
     def stop(self):
         """Stop all videos in the sequence."""
-        for video, _ in self.videos:
+        for video in self.videos:
             video.stop()
         for thread in self.threads:
             thread.join()
@@ -52,5 +52,5 @@ class Sequence:
 
     def freeze(self):
         """Pause all videos in the sequence."""
-        for video, _ in self.videos:
+        for video in self.videos:
             video.pause()
