@@ -44,29 +44,19 @@ class Video:
         self.is_playing = True
         if self.path:
             self.cap = cv2.VideoCapture(self.path)
-            fps = self.cap.get(cv2.CAP_PROP_FPS)  # Get the video's frame rate
-            delay = int(1000 / fps)  # Calculate the delay for each frame
+            fps = self.cap.get(cv2.CAP_PROP_FPS)
+            delay = int(1000 / fps) if fps > 0 else 25
 
             while self.is_playing:
                 ret, frame = self.cap.read()
                 if not ret:
-                    break
+                    break  # Video finished, now display black screen
                 cv2.imshow("Video", frame)
-
-                if cv2.waitKey(delay) & 0xFF == ord('q'):  # Use the calculated delay
-                    break
-        else:
-            # Display a black screen if path is None
-            while self.is_playing:
-                black_screen = np.zeros((self.monitor.height, self.monitor.width, 3), dtype=np.uint8)
-                cv2.imshow("Video", black_screen)
-
-                if cv2.waitKey(1) & 0xFF == ord('q'):
+                if cv2.waitKey(delay) & 0xFF == ord('q'):
                     break
 
-        if self.cap:
-            self.cap.release()
-        cv2.destroyAllWindows()
+        # Display a black screen indefinitely after video ends
+        self.display_black_screen()
 
     def play_soft(self):
         """Play the video or display a black screen on the specified monitor."""
@@ -79,31 +69,29 @@ class Video:
         self.is_paused = False
         if self.path:
             self.cap = cv2.VideoCapture(self.path)
-            fps = self.cap.get(cv2.CAP_PROP_FPS)  # Get the video's frame rate
-            delay = int(1000 / fps)  # Calculate the delay for each frame
+            fps = self.cap.get(cv2.CAP_PROP_FPS)
+            delay = int(1000 / fps) if fps > 0 else 25
 
             while self.is_playing:
                 if not self.is_paused:
                     ret, frame = self.cap.read()
                     if not ret:
-                        break
+                        break  # Video finished, now display black screen
                     cv2.imshow("Video", frame)
 
-                if cv2.waitKey(delay) & 0xFF == ord('q'):  # Use the calculated delay
-                    break
-        else:
-            # Display a black screen if path is None
-            while self.is_playing:
-                if not self.is_paused:
-                    black_screen = np.zeros((self.monitor.height, self.monitor.width, 3), dtype=np.uint8)
-                    cv2.imshow("Video", black_screen)
-
-                if cv2.waitKey(1) & 0xFF == ord('q'):
+                if cv2.waitKey(delay) & 0xFF == ord('q'):
                     break
 
-        if self.cap:
-            self.cap.release()
-        cv2.destroyAllWindows()
+        # Display a black screen indefinitely after video ends
+        self.display_black_screen()
+
+    def display_black_screen(self):
+        """Display a black screen indefinitely."""
+        while self.is_playing:
+            black_screen = np.zeros((self.monitor.height, self.monitor.width, 3), dtype=np.uint8)
+            cv2.imshow("Video", black_screen)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
     def pause(self):
         """Pause the video."""
