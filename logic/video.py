@@ -29,62 +29,52 @@ class Video:
         Hard play is when the video is played without the ability to pause.
         Soft play is when the video is played with the ability to pause.
         """
-        if hard:
-            self.play_hard()
-        else:
-            self.play_soft()
-
-    def play_hard(self):
-        """Play the video or display a black screen on the specified monitor."""
-        # Setup the window for fullscreen display on the specified monitor
-        cv2.namedWindow("Video", cv2.WND_PROP_FULLSCREEN)
-        cv2.moveWindow("Video", self.monitor.x, self.monitor.y)
-        cv2.setWindowProperty("Video", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-
-        self.is_playing = True
-        if self.path:
-            self.cap = cv2.VideoCapture(self.path)
-            fps = self.cap.get(cv2.CAP_PROP_FPS)
-            delay = int(1000 / fps) if fps > 0 else 25
-
-            while self.is_playing:
-                ret, frame = self.cap.read()
-                if not ret:
-                    break  # Video finished, now display black screen
-                cv2.imshow("Video", frame)
-                if cv2.waitKey(delay) & 0xFF == ord('q'):
-                    break
-
-        # Display a black screen indefinitely after video ends
-        self.display_black_screen()
+        self.play_soft()
 
     def play_soft(self):
-        """Play the video or display a black screen on the specified monitor."""
-        # Setup the window for fullscreen display on the specified monitor
+        """Play the video with fade-in and fade-out effects."""
         cv2.namedWindow("Video", cv2.WND_PROP_FULLSCREEN)
         cv2.moveWindow("Video", self.monitor.x, self.monitor.y)
         cv2.setWindowProperty("Video", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
         self.is_playing = True
         self.is_paused = False
+
         if self.path:
             self.cap = cv2.VideoCapture(self.path)
             fps = self.cap.get(cv2.CAP_PROP_FPS)
             delay = int(1000 / fps) if fps > 0 else 25
 
+            # Fade In
+            self.fade_effect(start_alpha=0, end_alpha=1, duration=1, fps=fps)
+
             while self.is_playing:
                 if not self.is_paused:
                     ret, frame = self.cap.read()
                     if not ret:
-                        break  # Video finished, now display black screen
+                        break  # Video finished, now fade out and display black screen
                     cv2.imshow("Video", frame)
 
                 if cv2.waitKey(delay) & 0xFF == ord('q'):
                     break
 
+            # Fade Out
+            self.fade_effect(start_alpha=1, end_alpha=0, duration=2, fps=fps)
+
         # Display a black screen indefinitely after video ends
         self.display_black_screen()
 
+    def fade_effect(self, start_alpha, end_alpha, duration, fps):
+        """Apply fade effect to the video."""
+        step = (end_alpha - start_alpha) / (duration * fps)
+        alpha = start_alpha
+
+        while alpha <= end_alpha and alpha >= start_alpha:
+            fade_frame = np.zeros((self.monitor.height, self.monitor.width, 3), dtype=np.uint8)
+            cv2.addWeighted(fade_frame, alpha, fade_frame, 1 - alpha, 0, fade_frame)
+            cv2.imshow("Video", fade_frame)
+            alpha += step
+            cv2.waitKey(int(1000 / fps))
     def display_black_screen(self):
         """Display a black screen indefinitely."""
         while self.is_playing:
