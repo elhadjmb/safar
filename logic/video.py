@@ -51,8 +51,10 @@ class Video:
                 if not self.is_paused:
                     ret, frame = self.cap.read()
                     if not ret:
-                        break  # Video finished, now fade out and display black screen
-                    cv2.imshow(self.monitor.window_name, frame)  # Use monitor's window
+                        break
+                    # Resize and display the frame
+                    frame_to_show = self.resize_frame(frame)
+                    cv2.imshow(self.monitor.window_name, frame_to_show)
 
                 if cv2.waitKey(delay) & 0xFF == ord('q'):
                     break
@@ -94,3 +96,18 @@ class Video:
         if self.cap is not None:
             self.cap.release()
         cv2.destroyAllWindows()
+
+    def resize_frame(self, frame):
+        """Resize the frame to fit the monitor's resolution while maintaining the aspect ratio."""
+        height, width = frame.shape[:2]
+        scale = min(self.monitor.width / width, self.monitor.height / height)
+        new_size = (int(width * scale), int(height * scale))
+        resized_frame = cv2.resize(frame, new_size, interpolation=cv2.INTER_AREA)
+        # Create a black background
+        background = np.zeros((self.monitor.height, self.monitor.width, 3), dtype=np.uint8)
+        # Calculate center position
+        x_center = (self.monitor.width - new_size[0]) // 2
+        y_center = (self.monitor.height - new_size[1]) // 2
+        # Place the resized frame onto the black background
+        background[y_center:y_center + new_size[1], x_center:x_center + new_size[0]] = resized_frame
+        return background
