@@ -1,8 +1,9 @@
 import json
 import os
+
 from .screen import Screen
-from .video import Video
 from .sequence import Sequence
+from .video import Video
 
 
 class Config:
@@ -37,7 +38,11 @@ class Config:
                 "videos": [0, 1, 2]
             },
             ...
-        ]
+        ],
+        "key_sequence_map": {
+            "c": 0,
+            "o": 1
+        }
     }
 
     Attributes:
@@ -47,10 +52,11 @@ class Config:
     """
 
     def __init__(self, monitors: list[Screen] = None, videos: list[Video] = None,
-                 sequences: list[Sequence] = None):
+                 sequences: list[Sequence] = None, key_sequence_map: dict[str, Sequence] = None):
         self.screens = [] if monitors is None else monitors
         self.videos = [] if videos is None else videos
         self.sequences = [] if sequences is None else sequences
+        self.key_sequence_map = key_sequence_map if key_sequence_map is not None else {}
 
     def make_config_dict(self):
         """
@@ -59,7 +65,8 @@ class Config:
         config_dict = {
             "screens": [],
             "videos": [],
-            "sequences": []
+            "sequences": [],
+            "key_sequence_map": self.key_sequence_map
         }
 
         for screen in self.screens:
@@ -103,6 +110,9 @@ class Config:
         with open(path, 'r') as f:
             config_dict = json.load(f)
 
+        if "key_sequence_map" in config_dict:
+            self.key_sequence_map = config_dict["key_sequence_map"]
+
         for screen_dict in config_dict["screens"]:
             self.screens.append(Screen(screen_dict["select_index"]))
 
@@ -121,10 +131,13 @@ class Config:
 
 
 class Player:
-    def __init__(self):
+    def __init__(self, headless=False):
+        self.key_sequence_map = None
+        self.config = Config()
         self.screens = []
         self.videos = []
         self.sequences = []
+        self.headless = headless
 
     def setup_screens(self):
         """
@@ -157,6 +170,12 @@ class Player:
                 self.videos.append(Video(video_path, monitor=Screen(select_index=monitor_number)))
             else:
                 print("Invalid file path.")
+
+    def create_key_function_map(self):
+        key_function_map = {}
+        for key, sequence_index in self.key_sequence_map.items():
+            key_function_map[key] = lambda idx=sequence_index: self.start_sequence(idx)
+        return key_function_map
 
     def create_sequences(self):
         """
@@ -210,6 +229,14 @@ class Player:
         """
         Load configuration from a file.
         """
+        if self.headless:
+            config = Config()
+            config.load(path)
+            self.screens = config.screens
+            self.videos = config.videos
+            self.sequences = config.sequences
+            self.key_sequence_map = config.key_sequence_map
+            return
         # Ask user to load the configuration
         choice = input("Load configuration? (y/n): ").lower()
         if choice == 'y':

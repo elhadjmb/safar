@@ -1,198 +1,77 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
-import json
-import os
+from tkinter import ttk
 
-from logic import Monitor
+from logic import Player
 
 
-class VideoSequenceConfigurator:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Video Sequence Configurator")
-        self.root.geometry("600x500")
+class KeyPressGUI:
+    def __init__(self, player):
+        self.player = player
+        self.key_function_map = {}
+        self.root = tk.Tk()
+        self.root.title("SAFAR!")
 
-        self.config = {"sequences": {}, "hotkeys": {}}
-        self.setup_ui()
+        # Styling
+        self.style = ttk.Style()
+        self.style.theme_use('clam')  # Use a nicer theme
+        self.root.configure(bg='light gray')
 
-    def setup_ui(self):
-        self.main_frame = ttk.Frame(self.root)
-        self.main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        # Instructions label
+        instruction_text = "Press a key to execute its corresponding function."
+        self.instructions_label = ttk.Label(self.root, text=instruction_text, font=("Helvetica", 12))
+        self.instructions_label.grid(row=0, column=0, columnspan=2, padx=10, pady=10)
 
-        self.canvas = tk.Canvas(self.main_frame)
-        self.canvas.pack(side="left", fill="both", expand=True)
+        # Key-Function Mapping Display
+        self.mapping_display = ttk.Treeview(self.root, columns=('Key', 'Function'), show='headings')
+        self.mapping_display.heading('Key', text='Key')
+        self.mapping_display.heading('Function', text='Function Name')
+        self.mapping_display.column('Key', width=100)
+        self.mapping_display.column('Function', width=200)
+        self.mapping_display.grid(row=1, column=0, columnspan=2, padx=10, pady=10)
 
-        scrollbar = ttk.Scrollbar(self.main_frame, orient="vertical", command=self.canvas.yview)
-        scrollbar.pack(side="right", fill="y")
+        # Load Config Button
+        self.load_config_button = ttk.Button(self.root, text="Load Config", command=self.load_config)
+        self.load_config_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
 
-        self.canvas.configure(yscrollcommand=scrollbar.set)
-        self.canvas.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        # Update key-function map and populate Treeview
+        self.load_config()
 
-        self.sequence_frame = ttk.Frame(self.canvas)
-        self.canvas.create_window((0, 0), window=self.sequence_frame, anchor="nw")
+        # Populate the treeview with key-function map
+        for key, func in self.key_function_map.items():  # Corrected this line
+            self.mapping_display.insert('', 'end', values=(key, func.__name__))
 
-        self.add_sequence_button = ttk.Button(self.root, text="Add Video Sequence", command=self.add_video_sequence)
-        self.add_sequence_button.pack(pady=10)
+        # Last key pressed display
+        self.last_key_label = ttk.Label(self.root, text="Last Key Pressed: None", font=("Helvetica", 12))
+        self.last_key_label.grid(row=2, column=0, columnspan=2, padx=10, pady=10)
 
-        self.save_config_button = ttk.Button(self.root, text="Save Configuration",
-                                             command=self.confirm_save_configuration)
-        self.save_config_button.pack(pady=10)
+        # General key binding
+        self.root.bind('<Key>', self.key_pressed)
 
-        self.load_config_button = ttk.Button(self.root, text="Load Configuration",
-                                             command=self.load_and_display_configuration)
-        self.load_config_button.pack(pady=10)
+        # Window size and layout
+        self.root.geometry('400x400')
+        self.root.minsize(400, 400)
 
-        self.load_from_file_button = ttk.Button(self.root, text="Load Config from File",
-                                                command=self.load_and_display_configuration)
-        self.load_from_file_button.pack(pady=10)
+        # Start the GUI
+        self.root.mainloop()
 
-        self.use_current_config_button = ttk.Button(self.root, text="Use Current Configuration",
-                                                    command=self.create_playback_interface)
-        self.use_current_config_button.pack(pady=10)
+    def key_pressed(self, event):
+        key = event.keysym
+        self.last_key_label.config(text=f"Last Key Pressed: {key}")
+        if key in self.key_function_map:
+            self.key_function_map[key]()
 
-    def add_video_sequence(self):
-        sequence_id = len(self.config["sequences"]) + 1
-        sequence_key = str(sequence_id)
+    def load_config(self):
+        config_path = "config.json"
+        self.player.load_config(config_path)
+        # Update the key-function map and the GUI display
+        self.update_key_function_map()
 
-        sequence_frame = ttk.LabelFrame(self.sequence_frame, text=f"Sequence {sequence_id}")
-        sequence_frame.pack(padx=10, pady=10, fill="x", expand=True)
+    def update_key_function_map(self):
+        self.key_function_map = self.player.create_key_function_map()
+        self.mapping_display.delete(*self.mapping_display.get_children())  # Clear existing entries
+        for key, func in self.key_function_map.items():
+            self.mapping_display.insert('', 'end', values=(key, func.__name__))
 
-        monitors = self.get_monitors()
-        videos = []
-        for monitor_num in range(len(monitors)):
-            monitor_frame = ttk.Frame(sequence_frame)
-            monitor_frame.pack(padx=10, pady=5, fill="x", expand=True)
 
-            file_button = ttk.Button(monitor_frame, text=f"Select Video for Monitor {monitor_num + 1}",
-                                     command=lambda m=monitor_num: self.select_video_file(sequence_key, m))
-            file_button.pack(side="left", padx=10)
-
-            file_label = ttk.Label(monitor_frame, text="No file selected", width=40)
-            file_label.pack(side="left", padx=10)
-            videos.append({"button": file_button, "label": file_label})
-
-        self.config["sequences"][sequence_key] = videos
-
-        hotkey_frame = ttk.Frame(sequence_frame)
-        hotkey_frame.pack(padx=10, pady=5, fill="x", expand=True)
-
-        hotkey_label = ttk.Label(hotkey_frame, text="Hotkey:")
-        hotkey_label.pack(side="left", padx=5)
-        hotkey_button = ttk.Button(sequence_frame, text="Set Hotkey",
-                                   command=lambda sk=sequence_key: self.capture_hotkey(sk))
-        hotkey_button.pack(side="left", padx=5)
-
-    def capture_hotkey(self, sequence_key):
-        self.hotkey_capture_window = tk.Toplevel(self.root)
-        self.hotkey_capture_window.title("Press a Key for Hotkey")
-        self.hotkey_capture_window.geometry("200x100")
-        tk.Label(self.hotkey_capture_window, text="Press a key...").pack(pady=20)
-        self.hotkey_capture_window.bind("<Key>", lambda event: self.set_hotkey(sequence_key, event))
-
-    def set_hotkey(self, sequence_key, input):
-        # Determine if input is an event or a string
-        hotkey = input.keysym if isinstance(input, tk.Event) else input
-
-        # Check for hotkey conflicts
-        if hotkey in self.config["hotkeys"] and self.config["hotkeys"][hotkey] != sequence_key:
-            response = messagebox.askyesno("Hotkey Conflict",
-                                           f"The hotkey '{hotkey}' is already assigned. Do you want to reassign it?")
-            if not response:
-                return
-
-        self.config["hotkeys"][hotkey] = sequence_key
-        messagebox.showinfo("Hotkey Set", f"Hotkey for Sequence {sequence_key} set to '{hotkey}'.")
-
-        if isinstance(input, tk.Event):
-            self.hotkey_capture_window.destroy()
-
-    def select_video_file(self, sequence_key, monitor_num):
-        filepath = filedialog.askopenfilename(title="Select Video File", filetypes=[("Video Files", "*.mp4;*.avi")])
-        if filepath:
-            self.config["sequences"][sequence_key][monitor_num]["label"].configure(text=os.path.basename(filepath))
-            self.config["sequences"][sequence_key][monitor_num]["button"].configure(text="Change Video")
-            self.config["sequences"][sequence_key][monitor_num] = filepath
-
-    def check_configuration_ready(self):
-        if self.config["sequences"] and self.config["hotkeys"]:
-            self.use_current_config_button["state"] = "normal"
-        else:
-            self.use_current_config_button["state"] = "disabled"
-
-    def confirm_save_configuration(self):
-        if messagebox.askokcancel("Confirm Save", "Are you sure you want to save this configuration?"):
-            self.save_configuration()
-
-    def save_configuration(self):
-        with open('config.json', 'w') as config_file:
-            json.dump(self.config, config_file)
-        messagebox.showinfo("Configuration Saved", "The configuration has been saved successfully.")
-
-    def load_configuration(self):
-        if os.path.exists('config.json'):
-            with open('config.json', 'r') as config_file:
-                self.config = json.load(config_file)
-
-    @staticmethod
-    def get_monitors():
-        return Monitor.get_monitors()
-
-    def load_and_display_configuration(self):
-        if os.path.exists('config.json'):
-            with open('config.json', 'r') as config_file:
-                self.config = json.load(config_file)
-            self.display_loaded_configuration()
-        else:
-            messagebox.showinfo("Load Configuration", "No saved configuration found.")
-
-    def display_loaded_configuration(self):
-        for sequence_key, videos in self.config["sequences"].items():
-            self.add_loaded_sequence(sequence_key, videos)
-
-    def add_loaded_sequence(self, sequence_key, videos):
-        sequence_id = sequence_key
-        sequence_frame = ttk.LabelFrame(self.sequence_frame, text=f"Sequence {sequence_id}", padx=10, pady=10)
-        sequence_frame.pack(padx=10, pady=5, fill="x", expand=True)
-
-        for monitor_num, video_path in enumerate(videos):
-            monitor_frame = ttk.Frame(sequence_frame)
-            monitor_frame.pack(padx=10, pady=5, fill="x", expand=True)
-
-            file_label = ttk.Label(monitor_frame,
-                                   text=os.path.basename(video_path) if video_path else "No file selected", width=40)
-            file_label.pack(side="left", padx=10)
-
-        # Add hotkey entry if exists in config
-        hotkey = [k for k, v in self.config["hotkeys"].items() if v == sequence_key]
-        hotkey_label = ttk.Label(sequence_frame, text="Hotkey:")
-        hotkey_label.pack(side="left", padx=5)
-        hotkey_entry = ttk.Entry(sequence_frame)
-        hotkey_entry.insert(0, hotkey[0] if hotkey else "")
-        hotkey_entry.pack(side="left", padx=5)
-
-    def create_playback_interface(self):
-        self.playback_window = tk.Toplevel(self.root)
-        self.playback_window.title("Playback Interface")
-        self.hotkey_labels = {}
-
-        for hotkey, sequence_key in self.config["hotkeys"].items():
-            label_text = f"Hotkey: {hotkey} - Sequence: {sequence_key}"
-            label = ttk.Label(self.playback_window, text=label_text)
-            label.pack()
-            self.hotkey_labels[hotkey] = label
-
-        self.playback_window.bind("<Key>", self.handle_hotkey_press)
-
-    def handle_hotkey_press(self, event):
-        hotkey = event.keysym
-        if hotkey in self.config["hotkeys"]:
-            sequence_key = self.config["hotkeys"][hotkey]
-            self.start_video_sequence(sequence_key)
-            self.highlight_hotkey(hotkey)
-
-    def start_video_sequence(self, sequence_key):
-        from logic import VideoSequence
-        sequence_data = self.config["sequences"].get(sequence_key)
-        if sequence_data:
-            video_sequence = VideoSequence({sequence_key: sequence_data})
-            video_sequence.start_sequence(sequence_key)
+player = Player(headless=True)
+gui = KeyPressGUI(player)
