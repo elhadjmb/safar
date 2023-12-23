@@ -1,5 +1,3 @@
-import random
-
 import cv2
 import numpy as np
 
@@ -15,8 +13,8 @@ class Video:
     def __repr__(self):
         return f"Video {self.video_index} ({self.path})"
 
-    def __init__(self, path, monitor):
-        self.video_index = random.randint(0, 1_000_000)
+    def __init__(self, path, monitor, video_index=0):
+        self.video_index = video_index
         self.is_paused = None
         self.path = path
         self.monitor = monitor
@@ -44,11 +42,8 @@ class Video:
             fps = self.cap.get(cv2.CAP_PROP_FPS)
             delay = int(1000 / fps) if fps > 0 else 25
 
-            # Fade In
-            self.fade_effect(start_alpha=0, end_alpha=1, duration=1, fps=fps)
-
             while self.is_playing:
-                if not self.is_paused:
+                if not self.is_paused and self.cap.isOpened():
                     ret, frame = self.cap.read()
                     if not ret:
                         break
@@ -56,11 +51,8 @@ class Video:
                     frame_to_show = self.resize_frame(frame)
                     cv2.imshow(self.monitor.window_name, frame_to_show)
 
-                if cv2.waitKey(delay) & 0xFF == ord('q'):
+                if cv2.waitKey(delay) & 0xFF == ord('q') or not self.is_playing:  # TODO: experiment with delay 1
                     break
-
-            # Fade Out
-            self.fade_effect(start_alpha=1, end_alpha=0, duration=2, fps=fps)
 
         # Display a black screen indefinitely after video ends
         self.display_black_screen()
@@ -95,7 +87,10 @@ class Video:
         self.is_paused = False
         if self.cap is not None:
             self.cap.release()
-        cv2.destroyAllWindows()
+            self.cap = None
+        # cv2.destroyAllWindows()
+        # Display a black screen indefinitely after video ends
+        self.display_black_screen()
 
     def resize_frame(self, frame):
         """Resize the frame to fit the monitor's resolution while maintaining the aspect ratio."""
