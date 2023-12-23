@@ -1,5 +1,5 @@
 import json
-from tkinter import filedialog, simpledialog
+from tkinter import filedialog, simpledialog, messagebox
 
 import customtkinter as ctk  # type: ignore
 
@@ -133,78 +133,108 @@ class ConfigGUI:
     def __init__(self, root, config):
         self.root = root
         self.config = config
-        self.root.geometry("500x700")
+        self.root.geometry("600x800")
         self.setup_widgets()
 
     def setup_widgets(self):
-        # Screen Setup Section
-        self.setup_screen_section()
+        # Create a main frame with scrollbar
+        main_frame = ctk.CTkFrame(self.root)
+        main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        canvas = ctk.CTkCanvas(main_frame)
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar = ctk.CTkScrollbar(main_frame, command=canvas.yview)
+        scrollbar.pack(side="right", fill="y")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        content_frame = ctk.CTkFrame(canvas)
+        canvas.create_window((0, 0), window=content_frame, anchor="nw")
 
-        # Video Setup Section
-        self.setup_video_section()
+        # Setup sections
+        self.setup_screen_section(content_frame)
+        self.setup_video_section(content_frame)
+        self.setup_sequence_section(content_frame)
+        self.setup_key_mapping_section(content_frame)
+        self.setup_save_section(content_frame)
 
-        # Sequence Setup Section
-        self.setup_sequence_section()
+        # Configure grid for content_frame to expand elements
+        content_frame.grid_columnconfigure(0, weight=1)
+        for i in range(content_frame.grid_size()[1]):
+            content_frame.grid_rowconfigure(i, weight=1)
 
-        # Key Mapping Section
-        self.setup_key_mapping_section()
-
-        # Save Configuration Section
-        self.setup_save_section()
-
-    def setup_screen_section(self):
-        screen_frame = ctk.CTkFrame(self.root)
+    def setup_screen_section(self, parent):
+        screen_frame = ctk.CTkFrame(parent)
         screen_frame.pack(pady=10, fill="x")
-        ctk.CTkLabel(screen_frame, text="Screen Setup", font=("Arial", 12, "bold")).pack(side="left")
-        ctk.CTkButton(screen_frame, text="Detect Screens", command=self.detect_screens).pack(side="right")
+        ctk.CTkLabel(screen_frame, text="Screen Setup", font=("Arial", 12, "bold")).grid(row=0, column=0, padx=5,
+                                                                                         sticky="w")
+        ctk.CTkButton(screen_frame, text="Detect Screens", command=self.detect_screens).grid(row=0, column=1, padx=5,
+                                                                                             sticky="e")
+        self.screen_list_frame = ctk.CTkFrame(parent)
+        self.screen_list_frame.pack(pady=10, fill="x")
 
     def detect_screens(self):
+        for widget in self.screen_list_frame.winfo_children():
+            widget.destroy()
         self.config.setup_screens()
         for i, screen in enumerate(self.config.screens):
-            screen_label = ctk.CTkLabel(self.root, text=f"Screen {i}: {screen.name}")
-            screen_label.pack()
-            blink_button = ctk.CTkButton(self.root, text="Blink", command=lambda s=screen: s.blink())
-            blink_button.pack()
+            screen_label = ctk.CTkLabel(self.screen_list_frame, text=f"Screen {i}: {screen.name}")
+            screen_label.pack(pady=5, fill="x")
+            blink_button = ctk.CTkButton(self.screen_list_frame, text="Blink", command=lambda s=screen: s.blink())
+            blink_button.pack(pady=5)
 
-    def setup_video_section(self):
-        self.video_frame = ctk.CTkFrame(self.root)
-        self.video_frame.pack(pady=10, fill="x")
-        ctk.CTkLabel(self.video_frame, text="Video Setup", font=("Arial", 12, "bold")).pack(side="left")
-        ctk.CTkButton(self.video_frame, text="Add Video", command=self.add_video).pack(side="right")
-        self.video_list_frame = ctk.CTkFrame(self.root)
+    def setup_video_section(self, parent):
+        video_frame = ctk.CTkFrame(parent)
+        video_frame.pack(pady=10, fill="x")
+        ctk.CTkLabel(video_frame, text="Video Setup", font=("Arial", 12, "bold")).grid(row=0, column=0, padx=5,
+                                                                                       sticky="w")
+        ctk.CTkButton(video_frame, text="Add Video", command=self.add_video).grid(row=0, column=1, padx=5, sticky="e")
+        self.video_list_frame = ctk.CTkFrame(parent)
         self.video_list_frame.pack(pady=10, fill="x")
 
     def add_video(self):
         filepath = filedialog.askopenfilename()
-        screen_index = simpledialog.askinteger("Input", "Enter Screen Index")
-        self.config.setup_video(filepath, screen_index)
-        self.update_video_list()
+        if filepath:
+            screen_index = simpledialog.askinteger("Input", "Enter Screen Index")
+            self.config.setup_video(filepath, screen_index)
+            self.update_video_list()
 
     def update_video_list(self):
         for widget in self.video_list_frame.winfo_children():
             widget.destroy()
-        # Display video list
         for video in self.config.videos:
-            video_info_frame = ctk.CTkFrame(self.video_list_frame)
-            video_info_frame.pack(pady=5, fill="x")
-            video_label = ctk.CTkLabel(video_info_frame,
+            video_label = ctk.CTkLabel(self.video_list_frame,
                                        text=f"Video {video.video_index}: {video.path} on Screen {video.monitor.select_index}")
-            video_label.pack(side="left", padx=10)
+            video_label.pack(pady=5, fill="x")
 
-    def setup_sequence_section(self):
-        self.sequence_frame = ctk.CTkFrame(self.root)
-        self.sequence_frame.pack(pady=10, fill="x")
-        ctk.CTkLabel(self.sequence_frame, text="Sequence Setup", font=("Arial", 12, "bold")).pack(side="left")
-        ctk.CTkButton(self.sequence_frame, text="Add Sequence", command=self.add_sequence).pack(side="right")
-        self.sequence_list_frame = ctk.CTkFrame(self.root)
+    def setup_sequence_section(self, parent):
+        sequence_frame = ctk.CTkFrame(parent)
+        sequence_frame.pack(pady=10, fill="x")
+        sequence_frame.grid_columnconfigure(1, weight=1)
+        sequence_frame.grid_columnconfigure(2, weight=1)
+
+        ctk.CTkLabel(sequence_frame, text="Sequence Setup", font=("Arial", 12, "bold")).grid(row=0, column=0, padx=5,
+                                                                                             sticky="w")
+        self.video_indexes_entry = ctk.CTkEntry(sequence_frame,
+                                                placeholder_text="Enter Video Indexes (comma-separated)")
+        self.video_indexes_entry.grid(row=0, column=1, padx=5, sticky="ew")
+        self.sequence_description_entry = ctk.CTkEntry(sequence_frame, placeholder_text="Enter Sequence Description")
+        self.sequence_description_entry.grid(row=0, column=2, padx=5, sticky="ew")
+        ctk.CTkButton(sequence_frame, text="Add Sequence", command=self.add_sequence).grid(row=0, column=3, padx=5)
+
+        self.sequence_list_frame = ctk.CTkFrame(parent)
         self.sequence_list_frame.pack(pady=10, fill="x")
 
     def add_sequence(self):
-        video_indexes = simpledialog.askstring("Input", "Enter Video Indexes (comma-separated)")
-        description = simpledialog.askstring("Input", "Enter Sequence Description")
-        video_indexes = [int(i.strip()) for i in video_indexes.split(',')]
-        self.config.setup_sequence(video_indexes, description)
-        self.update_sequence_list()
+        video_indexes = self.video_indexes_entry.get()
+        description = self.sequence_description_entry.get()
+        if video_indexes and description:
+            try:
+                video_indexes = [int(i.strip()) for i in video_indexes.split(',')]
+                self.config.setup_sequence(video_indexes, description)
+                self.update_sequence_list()
+            except ValueError:
+                messagebox.showerror("Error", "Invalid video indexes format")
+        else:
+            messagebox.showwarning("Warning", "Please fill in all fields")
 
     def update_sequence_list(self):
         for widget in self.sequence_list_frame.winfo_children():
@@ -212,20 +242,23 @@ class ConfigGUI:
         for sequence in self.config.sequences:
             sequence_label = ctk.CTkLabel(self.sequence_list_frame,
                                           text=f"Sequence {sequence.sequence_index}: {sequence.description}")
-            sequence_label.pack()
+            sequence_label.pack(pady=5, fill="x")
 
-    def setup_key_mapping_section(self):
-        self.key_mapping_frame = ctk.CTkFrame(self.root)
-        self.key_mapping_frame.pack(pady=10, fill="x")
-        ctk.CTkLabel(self.key_mapping_frame, text="Key Mapping", font=("Arial", 12, "bold")).pack(side="left")
-        self.key_entry = ctk.CTkEntry(self.key_mapping_frame, placeholder_text="Enter Key")
-        self.key_entry.pack(side="left", padx=5)
-        self.sequence_index_entry = ctk.CTkEntry(self.key_mapping_frame, placeholder_text="Enter Sequence Index")
-        self.sequence_index_entry.pack(side="left", padx=5)
-        ctk.CTkButton(self.key_mapping_frame, text="Map Key", command=self.map_key_sequence).pack(side="right")
+    def setup_key_mapping_section(self, parent):
+        key_mapping_frame = ctk.CTkFrame(parent)
+        key_mapping_frame.pack(pady=10, fill="x")
+        key_mapping_frame.grid_columnconfigure(1, weight=1)
+        key_mapping_frame.grid_columnconfigure(2, weight=1)
 
-        # Frame to display key mappings
-        self.key_mapping_list_frame = ctk.CTkFrame(self.root)
+        ctk.CTkLabel(key_mapping_frame, text="Key Mapping", font=("Arial", 12, "bold")).grid(row=0, column=0, padx=5,
+                                                                                             sticky="w")
+        self.key_entry = ctk.CTkEntry(key_mapping_frame, placeholder_text="Enter Key")
+        self.key_entry.grid(row=0, column=1, padx=5, sticky="ew")
+        self.sequence_index_entry = ctk.CTkEntry(key_mapping_frame, placeholder_text="Enter Sequence Index")
+        self.sequence_index_entry.grid(row=0, column=2, padx=5, sticky="ew")
+        ctk.CTkButton(key_mapping_frame, text="Map Key", command=self.map_key_sequence).grid(row=0, column=3, padx=5)
+
+        self.key_mapping_list_frame = ctk.CTkFrame(parent)
         self.key_mapping_list_frame.pack(pady=10, fill="x")
 
     def map_key_sequence(self):
@@ -239,14 +272,16 @@ class ConfigGUI:
             widget.destroy()
         for key, sequence_index in self.config.key_sequence_map.items():
             mapping_label = ctk.CTkLabel(self.key_mapping_list_frame, text=f"Key '{key}' -> Sequence {sequence_index}")
-            mapping_label.pack()
+            mapping_label.pack(pady=5, fill="x")
 
-    def setup_save_section(self):
-        save_frame = ctk.CTkFrame(self.root)
+    def setup_save_section(self, parent):
+        save_frame = ctk.CTkFrame(parent)
         save_frame.pack(pady=20, fill="x")
         ctk.CTkButton(save_frame, text="Save Configuration", command=self.save_config).pack()
 
     def save_config(self):
-        self.config.save()
-        status_label = ctk.CTkLabel(self.container_frame, text="Configuration Saved", text_color="green")
-        status_label.pack(pady=10)
+        try:
+            self.config.save()
+            messagebox.showinfo("Success", "Configuration Saved Successfully")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save configuration: {str(e)}")
