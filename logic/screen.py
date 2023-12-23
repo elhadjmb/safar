@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 from screeninfo import get_monitors
 
 
@@ -47,6 +48,22 @@ class Screen:
         if self.window_created:
             cv2.destroyWindow(self.window_name)
             self.window_created = False
+
+    def blink(self, color=(0, 0, 255), duration=0.5):
+        """
+        Blink the screen with a specified color (BGR format) and duration.
+        Default color is red: (0, 0, 255).
+        """
+        self.create_window()
+
+        # Create an image filled with the specified color
+        colored_img = np.full((self.height, self.width, 3), color, dtype=np.uint8)
+
+        # Show the colored image
+        cv2.imshow(self.window_name, colored_img)
+        cv2.waitKey(int(duration * 1000))
+
+        self.close_window()
 
     @staticmethod
     def detect_monitors():
