@@ -1,4 +1,3 @@
-import random
 import threading
 from multiprocessing import Process
 
@@ -17,12 +16,13 @@ class Sequence:
     def __repr__(self):
         return f"Sequence {self.sequence_index} ({len(self.videos)} videos)"
 
-    def __init__(self, videos):
-        self.sequence_index = random.randint(0, 1_000_000)
+    def __init__(self, videos, sequence_index=0, description=""):
+        self.sequence_index = sequence_index
         self.videos = videos
         self.threads = []
         self.processes = []
         self.use_threads = False
+        self.description = description
 
         if not videos:
             # If no videos are specified, map black screens to all screens.

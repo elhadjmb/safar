@@ -27,14 +27,15 @@ class Config:
             {
                 "video_index": 0,
                 "path": "path/to/video.mp4",
-                "monitor": 0,
+                "screen": 0,
             },
             ...
         ],
         "sequences": [
             {
                 "sequence_index": 0,
-                "videos": [0, 1, 2]
+                "videos": [0, 1, 2],
+                "description": "Description here"
             },
             ...
         ],
@@ -56,6 +57,36 @@ class Config:
         self.videos = [] if videos is None else videos
         self.sequences = [] if sequences is None else sequences
         self.key_sequence_map = key_sequence_map if key_sequence_map is not None else {}
+
+        self.video_index = 0
+        self.sequence_index = 0
+
+        if not self.screens:
+            self.setup_screens()
+
+    def setup_screens(self):
+        """
+        Set up screens based on auto-detection.
+        """
+        print("Auto-detecting screens...")
+        self.screens = Screen.detect_monitors()
+
+    def setup_video(self, video_path: str, screen_index: int):
+        if os.path.exists(video_path):
+            video = Video(video_path, monitor=self.screens[screen_index], video_index=self.video_index)
+            self.videos.append(video)
+            self.video_index += 1
+        else:
+            print("Invalid file path.")
+
+    def setup_sequence(self, videos_indexes: list[int], description: str):
+        """
+        Create sequences based on selected videos list.
+        """
+        videos_list = [self.videos[index] for index in videos_indexes]
+        sequence = Sequence(videos_list, sequence_index=self.sequence_index, description=description)
+        self.sequences.append(sequence)
+        self.sequence_index += 1
 
     def make_config_dict(self):
         """
@@ -88,7 +119,8 @@ class Config:
         for sequence in self.sequences:
             config_dict["sequences"].append({
                 "sequence_index": sequence.sequence_index,
-                "videos": [video.video_index for video in sequence.videos]
+                "videos": [video.video_index for video in sequence.videos],
+                "description": sequence.description
             })
 
         return config_dict
@@ -122,89 +154,43 @@ class Config:
 
         for sequence_dict in config_dict["sequences"]:
             videos = []
+            description = sequence_dict["description"]
             for video_index in sequence_dict["videos"]:
                 for video in self.videos:
                     if video.video_index == video_index:
                         videos.append(video)
-            self.sequences.append(Sequence(videos))
+            self.sequences.append(
+                Sequence(videos, sequence_index=sequence_dict["sequence_index"], description=description))
 
 
 class Player:
-    def __init__(self, headless=False):
+    def __init__(self, headless=False, config: Config = None):
         self.key_sequence_map = None
-        self.config = Config()
+        self.config = config if config is not None else Config()
         self.screens = []
         self.videos = []
         self.sequences = []
         self.headless = headless
-
-    def setup_screens(self):
-        """
-        Set up screens based on user input or auto-detection.
-        """
-        auto_detect = input("Auto-detect screens? (y/n): ").lower() == 'y'
-        if auto_detect:
-            self.screens = Screen.detect_monitors()
-        else:
-            while True:
-                try:
-                    monitor_number = int(
-                        input(f"Enter monitor number (or -1 to stop) [Monitors: {Screen.detect_monitors()}]: "))
-                    if monitor_number == -1:
-                        break
-                    self.screens.append(Screen(select_index=monitor_number))
-                except ValueError as e:
-                    print(f"Error: {e}")
-
-    def setup_videos(self):
-        """
-        Allow user to input video file paths.
-        """
-        while True:
-            video_path = input("Enter video path (or 'done' to finish): ")
-            if video_path.lower() == 'done':
-                break
-            elif os.path.exists(video_path):
-                monitor_number = int(input(f"Enter monitor number [Screens: {self.screens}]: "))
-                self.videos.append(Video(video_path, monitor=Screen(select_index=monitor_number)))
-            else:
-                print("Invalid file path.")
+        self.played_sequence = None
+        self.load_config()
 
     def create_key_function_map(self):
         key_function_map = {}
         for key, sequence_index in self.key_sequence_map.items():
-            key_function_map[key] = lambda idx=sequence_index: self.start_sequence(idx)
+            key_function_map[key] = (
+                lambda idx=sequence_index: self.start_sequence(idx), self.sequences[sequence_index].description)
         return key_function_map
-
-    def create_sequences(self):
-        """
-        Create sequences based on user input.
-        """
-        print("Creating sequences. Enter 'done' to finish.")
-        while True:
-            video_indices = input(f"Enter video indices (comma-separated) ({self.videos}): ")
-            monitor_indices = input(f"Enter monitor indices (comma-separated) ({self.screens}): ")
-
-            if video_indices.lower() == 'done' or monitor_indices.lower() == 'done':
-                break
-
-            try:
-                video_indices = [int(v) for v in video_indices.split(',')]
-                monitor_indices = [int(m) for m in monitor_indices.split(',')]
-                sequence_videos = [self.videos[i] for i in video_indices]
-                sequence_monitors = [self.screens[i] for i in monitor_indices]
-                for video in sequence_videos:
-                    video.monitor = sequence_monitors[sequence_videos.index(video)]
-                self.sequences.append(Sequence(sequence_videos))
-            except (IndexError, ValueError) as e:
-                print(f"Error creating sequence: {e}")
 
     def start_sequence(self, sequence_id):
         """
         Start a specific video sequence.
         """
         try:
+            if self.played_sequence is not None:
+                self.sequences[self.played_sequence].stop()
             self.sequences[sequence_id].start()
+            self.played_sequence = sequence_id
+
         except IndexError:
             print("Invalid sequence ID.")
 
@@ -217,32 +203,12 @@ class Player:
         except IndexError:
             print("Invalid sequence ID.")
 
-    def save_config(self, path="config.json"):
-        """
-        Save configuration to a file.
-        """
-        config = Config(self.screens, self.videos, self.sequences, self.key_sequence_map)
-        config.save(path)
-
     def load_config(self, path="config.json"):
         """
         Load configuration from a file.
         """
-        if self.headless:
-            config = Config()
-            config.load(path)
-            self.screens = config.screens
-            self.videos = config.videos
-            self.sequences = config.sequences
-            self.key_sequence_map = config.key_sequence_map
-            return
-        # Ask user to load the configuration
-        choice = input("Load configuration? (y/n): ").lower()
-        if choice == 'y':
-            config = Config()
-            config.load(path)
-            self.screens = config.screens
-            self.videos = config.videos
-            self.sequences = config.sequences
-        else:
-            print("Not loading configuration.")
+        self.config.load(path)
+        self.screens = self.config.screens
+        self.videos = self.config.videos
+        self.sequences = self.config.sequences
+        self.key_sequence_map = self.config.key_sequence_map

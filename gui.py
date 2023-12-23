@@ -92,21 +92,20 @@ class KeyPressGUI:
 
     def populate_mapping_table(self):
         self.clear_existing_mapping_rows()
-        for row, (key, func) in enumerate(self.key_function_map.items(), start=1):
-            self.add_mapping_row(row, key, func)
+        for row, (key, (func, desc)) in enumerate(self.key_function_map.items(), start=1):
+            self.add_mapping_row(row, key, desc)
 
     def clear_existing_mapping_rows(self):
         for widget in self.mapping_frame.winfo_children():
             if not isinstance(widget, ctk.CTkLabel):  # Skip header labels
                 widget.destroy()
 
-    def add_mapping_row(self, row, key, func):
+    def add_mapping_row(self, row, key, desc):
         ctk.CTkLabel(self.mapping_frame, text=key).grid(row=row, column=0, sticky='nsew')
-        ctk.CTkLabel(self.mapping_frame, text=func.__name__).grid(row=row, column=1, sticky='nsew')
-        ctk.CTkLabel(self.mapping_frame, text='Description here').grid(row=row, column=2, sticky='nsew')
+        ctk.CTkLabel(self.mapping_frame, text=desc).grid(row=row, column=1, sticky='nsew')
 
     def create_mapping_table(self):
-        headers = ['Key', 'Function Name', 'Description']
+        headers = ['Key', 'Description']
         for col, header in enumerate(headers):
             label = ctk.CTkLabel(self.mapping_frame, text=header, font=('Helvetica', 10, 'bold'))
             label.grid(row=0, column=col, sticky='nsew')
