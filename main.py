@@ -2,8 +2,8 @@ from gui import KeyPressGUI
 from logic import Player
 
 
-def main(headless):
-    player = Player(headless)
+def headless():
+    player = Player()
 
     while True:
         print("\nSteps:")
@@ -22,30 +22,40 @@ def main(headless):
             player.setup_videos()
         if not player.sequences:
             player.create_sequences()
-        player.save_config()
+        save = input("Save config? (y/n): ")
+        if save == 'y':
+            player.save_config()
 
-        if not headless:
-            while True:
-                sequence_id = int(input(f"Enter the sequence ID to start ({player.sequences}): "))
-                player.start_sequence(sequence_id)
+        while True:
+            sequence_id = int(input(f"Enter the sequence ID to start ({player.sequences}): "))
+            player.start_sequence(sequence_id)
 
-                choice = input("Stop sequence? (y/n/q): ")
-                if choice == 'y':
-                    print("Stopping sequence...")
-                    player.stop_sequence(sequence_id)
-                elif choice == 'q':
-                    print("Stopping sequence...")
-                    player.stop_sequence(sequence_id)
-                    break
+            choice = input("Stop sequence? (y/n/q): ")
+            if choice == 'y':
+                print("Stopping sequence...")
+                player.stop_sequence(sequence_id)
+            elif choice == 'q':
+                print("Stopping sequence...")
+                player.stop_sequence(sequence_id)
+                break
 
         choice = input("Exit? (y/n): ")
         if choice == 'y':
             print("Exiting the program...")
             break
 
-    player.headless = True
+
+def graphical():
+    player = Player(True)
     gui = KeyPressGUI(player)
 
 
+def main(headless):
+    if headless:
+        headless()
+    else:
+        graphical()
+
+
 if __name__ == "__main__":
-    main(False)
+    main(headless=False)
