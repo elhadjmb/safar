@@ -234,3 +234,7 @@ class Player:
         self.videos = self.config.videos
         self.sequences = self.config.sequences
         self.key_sequence_map = self.config.key_sequence_map
+
+    def kill_all_sequences(self):
+        for sequence in self.sequences:
+            self.stop_sequence(sequence.sequence_index)

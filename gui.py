@@ -14,7 +14,8 @@ class KeyPressGUI:
         self.create_mapping_frame()
         self.create_load_config_button()
         self.create_last_key_label()
-        self.create_setup_button()  # Add this line to create the Setup button
+        self.create_setup_button()
+        self.create_kill_all_button()
         self.create_status_bar()
         self.root.mainloop()
 
@@ -84,7 +85,7 @@ class KeyPressGUI:
         self.setup_window = ctk.CTkToplevel(self.root)
         self.setup_window.title("Setup Configuration")
         self.setup_window.geometry("300x300")
-        # Add more setup components here as needed
+        # TODO: Add more setup components here as needed
 
     def update_key_function_map(self):
         self.key_function_map = self.player.create_key_function_map()
@@ -110,3 +111,11 @@ class KeyPressGUI:
             label = ctk.CTkLabel(self.mapping_frame, text=header, font=('Helvetica', 10, 'bold'))
             label.grid(row=0, column=col, sticky='nsew')
             self.mapping_frame.grid_columnconfigure(col, weight=1)
+
+    def create_kill_all_button(self):
+        self.kill_all_button = ctk.CTkButton(self.root, text="Kill All", command=self.kill_all_videos)
+        self.kill_all_button.grid(row=6, column=0, padx=10, pady=10, sticky="ew")
+
+    def kill_all_videos(self):
+        self.player.kill_all_sequences()
+        self.status_bar.configure(text="All videos forcefully stopped.")
