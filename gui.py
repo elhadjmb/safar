@@ -58,7 +58,7 @@ class KeyPressGUI:
     def execute_key_function(self, key):
         if key in self.key_function_map:
             try:
-                self.key_function_map[key]()
+                self.key_function_map[key][0]()
             except Exception as e:
                 self.status_bar.configure(text=f"Error: {e}")
 
