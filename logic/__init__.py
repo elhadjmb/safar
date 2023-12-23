@@ -183,14 +183,12 @@ class Config:
                         videos.append(video)
             self.sequences.append(
                 Sequence(videos, sequence_index=sequence_dict["sequence_index"], description=description))
-        # TODO: experiment with this
-        self.__init__(self.screens, self.videos, self.sequences, self.key_sequence_map)
 
 
 class Player:
     def __init__(self, headless=False, config: Config = None):
         self.key_sequence_map = None
-        self.config = config
+        self.config = config if config is not None else Config()
         self.screens = []
         self.videos = []
         self.sequences = []
@@ -232,7 +230,6 @@ class Player:
         """
         Load configuration from a file.
         """
-        self.config = Config()
         self.config.load(path)
         self.screens = self.config.screens
         self.videos = self.config.videos

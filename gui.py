@@ -1,6 +1,9 @@
 import json
+from tkinter import filedialog, simpledialog, messagebox
 
 import customtkinter as ctk  # type: ignore
+
+from logic import Config
 
 
 class KeyPressGUI:
@@ -86,6 +89,11 @@ class KeyPressGUI:
         self.setup_window.title("Setup Configuration")
         self.setup_window.geometry("300x300")
         # TODO: Add more setup components here as needed
+        ctk.set_appearance_mode("dark")  # Set the theme of GUI
+        root = ctk.CTk()
+        root.title("Configuration Setup")
+        app = ConfigGUI(root, Config())
+        root.mainloop()
 
     def update_key_function_map(self):
         self.key_function_map = self.player.create_key_function_map()
@@ -119,3 +127,72 @@ class KeyPressGUI:
     def kill_all_videos(self):
         self.player.kill_all_sequences()
         self.status_bar.configure(text="All videos forcefully stopped.")
+
+
+class ConfigGUI:
+    def __init__(self, root, config):
+        self.root = root
+        self.config = config
+        self.root.geometry("400x600")
+        self.setup_widgets()
+
+    def setup_widgets(self):
+        # Screen Setup Section
+        ctk.CTkLabel(self.root, text="Screen Setup", font=("Arial", 14, "bold")).pack(pady=10)
+        ctk.CTkButton(self.root, text="Detect Screens", command=self.detect_screens).pack(pady=5)
+
+        # Video Setup Section
+        ctk.CTkLabel(self.root, text="Video Setup", font=("Arial", 14, "bold")).pack(pady=10)
+        ctk.CTkButton(self.root, text="Add Video", command=self.add_video).pack(pady=5)
+
+        # Sequence Setup Section
+        ctk.CTkLabel(self.root, text="Sequence Setup", font=("Arial", 14, "bold")).pack(pady=10)
+        ctk.CTkButton(self.root, text="Add Sequence", command=self.add_sequence).pack(pady=5)
+
+        # Key Mapping Section
+        ctk.CTkLabel(self.root, text="Key Mapping", font=("Arial", 14, "bold")).pack(pady=10)
+        self.key_entry = ctk.CTkEntry(self.root, placeholder_text="Enter Key")
+        self.key_entry.pack(pady=5)
+        self.sequence_index_entry = ctk.CTkEntry(self.root, placeholder_text="Enter Sequence Index")
+        self.sequence_index_entry.pack(pady=5)
+        ctk.CTkButton(self.root, text="Map Key to Sequence", command=self.map_key_sequence).pack(pady=5)
+
+        # Save Configuration
+        ctk.CTkButton(self.root, text="Save Configuration", command=self.save_config).pack(pady=20)
+
+    def detect_screens(self):
+        self.config.setup_screens()
+        print("Screens Detected:", self.config.screens)
+
+    def add_video(self):
+        filepath = filedialog.askopenfilename()
+        if not filepath:
+            return
+        screen_index = simpledialog.askinteger("Input", "Enter Screen Index")
+        if screen_index is not None:
+            self.config.setup_video(filepath, screen_index)
+
+    def add_sequence(self):
+        video_indexes = simpledialog.askstring("Input", "Enter Video Indexes (comma-separated)")
+        if not video_indexes:
+            return
+        description = simpledialog.askstring("Input", "Enter Sequence Description")
+        if not description:
+            return
+        try:
+            video_indexes = [int(i.strip()) for i in video_indexes.split(',')]
+            self.config.setup_sequence(video_indexes, description)
+        except ValueError:
+            messagebox.showerror("Error", "Invalid video indexes format")
+
+    def save_config(self):
+        try:
+            self.config.save()
+            messagebox.showinfo("Success", "Configuration Saved Successfully")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save configuration: {str(e)}")
+
+    def map_key_sequence(self):
+        key = self.key_entry.get()
+        sequence_index = int(self.sequence_index_entry.get())
+        self.config.setup_key_sequence_map(key, sequence_index)
