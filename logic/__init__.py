@@ -63,6 +63,22 @@ class Config:
 
         if not self.screens:
             self.setup_screens()
+        if not self.videos:
+            for screen_index in range(len(self.screens)):
+                self.setup_video("", 0)
+
+            temp_videos = []
+            for video_index in range(len(self.videos)):
+                if not self.videos[video_index].path:
+                    temp_videos.append(self.videos[video_index])
+            temp_video_indexes = []
+            for video in temp_videos:
+                temp_video_indexes.append(video.video_index)
+            self.setup_sequence(temp_video_indexes, "BLACK SCREENS")
+            for sequence in self.sequences:
+                if sequence.description == "BLACK SCREENS":
+                    self.setup_key_sequence_map("0", sequence.sequence_index)
+                    break
 
     def setup_screens(self):
         """
@@ -87,6 +103,12 @@ class Config:
         sequence = Sequence(videos_list, sequence_index=self.sequence_index, description=description)
         self.sequences.append(sequence)
         self.sequence_index += 1
+
+    def setup_key_sequence_map(self, key: str, sequence_index: int):
+        """
+        Create key sequence map based on selected key and sequence.
+        """
+        self.key_sequence_map[key] = sequence_index
 
     def make_config_dict(self):
         """
