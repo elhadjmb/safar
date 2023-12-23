@@ -184,7 +184,7 @@ class Config:
             self.sequences.append(
                 Sequence(videos, sequence_index=sequence_dict["sequence_index"], description=description))
         # TODO: experiment with this
-        # self.__init__(self.screens, self.videos, self.sequences, self.key_sequence_map)
+        self.__init__(self.screens, self.videos, self.sequences, self.key_sequence_map)
 
 
 class Player:
@@ -212,8 +212,9 @@ class Player:
         try:
             if self.played_sequence is not None:
                 self.sequences[self.played_sequence].stop()
-            self.sequences[sequence_id].start()
             self.played_sequence = sequence_id
+            self.sequences[sequence_id].start()
+
 
         except IndexError:
             print("Invalid sequence ID.")

@@ -88,9 +88,7 @@ class Video:
         if self.cap is not None:
             self.cap.release()
             self.cap = None
-        # cv2.destroyAllWindows()
-        # Display a black screen indefinitely after video ends
-        self.display_black_screen()
+        self.monitor.close_window()
 
     def resize_frame(self, frame):
         """Resize the frame to fit the monitor's resolution while maintaining the aspect ratio."""
