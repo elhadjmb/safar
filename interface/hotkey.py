@@ -2,7 +2,7 @@ import json
 
 import customtkinter as ctk  # type: ignore
 
-from .setup import ConfigGUI
+from .edit import ScreenEditGUI
 
 
 class KeyPressBackend:
@@ -37,15 +37,16 @@ class KeyPressBackend:
 
     def open_setup_window(self):
         # Code to create and show a new setup window
-        self.setup_window = ctk.CTkToplevel(self.root)
-        self.setup_window.title("Setup Configuration")
-        self.setup_window.geometry("300x300")
-        # TODO: Add more setup components here as needed
-        ctk.set_appearance_mode("dark")  # Set the theme of GUI
+        # Create and run the GUI
         root = ctk.CTk()
-        root.title("Configuration Setup")
-        app = ConfigGUI(root, self.player.config)
+        app = ScreenEditGUI(root, self.player.config)
         root.mainloop()
+        # TODO: Add more setup components here as needed
+        # ctk.set_appearance_mode("dark")  # Set the theme of GUI
+        # root = ctk.CTk()
+        # root.title("Configuration Setup")
+        # app = SetupGUI(root, self.player.config)
+        # root.mainloop()
 
     def update_key_function_map(self):
         self.key_function_map = self.player.create_key_function_map()
@@ -114,7 +115,8 @@ class KeyPressGUI(KeyPressBackend):
         self.status_bar.grid(row=4, column=0, padx=10, pady=5, sticky="w")
 
     def create_setup_button(self):
-        self.setup_button = ctk.CTkButton(self.root, text="Setup", state='disabled', command=self.open_setup_window)
+        self.setup_button = ctk.CTkButton(self.root, text="Edit screens", state='disabled',
+                                          command=self.open_setup_window)
         self.setup_button.grid(row=5, column=0, padx=10, pady=10, sticky="ew")
 
     def add_mapping_row(self, row, key, desc):

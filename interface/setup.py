@@ -3,7 +3,7 @@ from tkinter import filedialog, simpledialog, messagebox
 import customtkinter as ctk  # type: ignore
 
 
-class ConfigBackend:
+class SetupBackend:
     def __init__(self, root, config):
         self.root = root
         self.config = config
@@ -11,7 +11,6 @@ class ConfigBackend:
     def detect_screens(self):
         for widget in self.screen_list_frame.winfo_children():
             widget.destroy()
-        self.config.setup_screens()
         self.screen_location_entries = {}  # Store the location entries for each screen
         for i, screen in enumerate(self.config.screens):
             screen_label = ctk.CTkLabel(self.screen_list_frame, text=f"Screen {i}: {screen.name}")
@@ -65,7 +64,7 @@ class ConfigBackend:
             messagebox.showerror("Error", f"Failed to save configuration: {str(e)}")
 
 
-class ConfigGUI(ConfigBackend):
+class SetupGUI(SetupBackend):
     def __init__(self, root, config):
         super().__init__(root, config)
         self.root.geometry("600x800")

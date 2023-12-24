@@ -4,7 +4,7 @@ from tkinter import messagebox
 import customtkinter as ctk  # Make sure customtkinter is installed
 
 
-class ConfigBackend:
+class ScreenEditBackend:
     def __init__(self, config):
         self.config = config
         self.detected_screens = []
@@ -40,7 +40,7 @@ class ConfigBackend:
             raise IndexError("Screen ID out of range.")
 
 
-class ConfigGUI(ConfigBackend):
+class ScreenEditGUI(ScreenEditBackend):
     def __init__(self, root, config):
         super().__init__(config=config)
         self.root = root
