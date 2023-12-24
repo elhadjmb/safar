@@ -32,7 +32,7 @@ class SetupBackend:
             self.update_video_list()
 
     def add_sequence(self):
-        video_indexes = self.video_indices_var.get()
+        video_indexes = self.video_indexes_entry.get()
         description = self.sequence_description_entry.get()
         if video_indexes and description:
             try:
@@ -166,23 +166,21 @@ class SetupGUI(SetupBackend):
         self.update_sequence_list()
 
     def setup_key_mapping_section(self, parent):
-        key_mapping_frame = ctk.CTkFrame(parent)
-        key_mapping_frame.grid(row=6, column=0, sticky='ew', padx=10, pady=10)
-        key_mapping_frame.grid_columnconfigure(1, weight=1)
-        key_mapping_frame.grid_columnconfigure(2, weight=1)
+        key_mapping_frame = self.setup_section_frame(parent, 3, "Key Mapping")
 
-        ctk.CTkLabel(key_mapping_frame, text="Key Mapping", font=("Arial", 12, "bold")).grid(row=0, column=0,
-                                                                                             sticky='w')
-        self.key_entry = ctk.CTkEntry(key_mapping_frame, placeholder_text="Enter Key")
-        self.key_entry.grid(row=0, column=1, sticky='ew')
-        self.sequence_index_entry = ctk.CTkEntry(key_mapping_frame, placeholder_text="Enter Sequence Index")
-        self.sequence_index_entry.grid(row=0, column=2, sticky='ew')
-        ctk.CTkButton(key_mapping_frame, text="Map Key", command=self.map_key_sequence).grid(row=0, column=3,
-                                                                                             sticky='e')
+        ctk.CTkLabel(key_mapping_frame, text="Enter Key:").grid(row=1, column=0, sticky='w', padx=5)
+        self.key_entry = ctk.CTkEntry(key_mapping_frame)
+        self.key_entry.grid(row=1, column=1, sticky='ew')
 
-        self.key_mapping_list_frame = ctk.CTkFrame(parent)
-        self.key_mapping_list_frame.grid(row=7, column=0, sticky='ew', padx=10)
+        ctk.CTkLabel(key_mapping_frame, text="Sequence Index:").grid(row=1, column=2, sticky='w', padx=5)
+        self.sequence_index_entry = ctk.CTkEntry(key_mapping_frame)
+        self.sequence_index_entry.grid(row=1, column=3, sticky='ew')
 
+        map_key_button = ctk.CTkButton(key_mapping_frame, text="Map Key", command=self.map_key_sequence)
+        map_key_button.grid(row=1, column=4, sticky='e', padx=5)
+
+        self.key_mapping_list_frame = ctk.CTkFrame(key_mapping_frame)
+        self.key_mapping_list_frame.grid(row=2, column=0, columnspan=5, sticky='ew', padx=10)
         self.update_key_mapping_list()
 
     def setup_save_section(self, parent):
