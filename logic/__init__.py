@@ -164,17 +164,21 @@ class Config:
         with open(path, 'r') as f:
             config_dict = json.load(f)
 
+
         if "key_sequence_map" in config_dict:
             self.key_sequence_map = config_dict["key_sequence_map"]
 
+        self.screens = []
         for screen_dict in config_dict["screens"]:
             self.screens.append(Screen(screen_dict["select_index"], screen_dict["location"]))
 
+        self.videos = []
         for video_dict in config_dict["videos"]:
             v = Video(video_dict["path"], self.screens[video_dict["screen"]])
             v.video_index = video_dict["video_index"]
             self.videos.append(v)
 
+        self.sequences = []
         for sequence_dict in config_dict["sequences"]:
             videos = []
             description = sequence_dict["description"]
