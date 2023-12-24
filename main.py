@@ -1,4 +1,4 @@
-from gui import KeyPressGUI
+from interface import KeyPressGUI
 from logic import Player
 
 
