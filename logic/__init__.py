@@ -67,10 +67,10 @@ class Config:
             for screen_index in range(len(self.screens)):
                 self.setup_video("", 0)
 
-            temp_videos = []
-            for video_index in range(len(self.videos)):
-                if not self.videos[video_index].path:
-                    temp_videos.append(self.videos[video_index])
+        temp_videos = []
+        for video_index in range(len(self.videos)):
+            if not self.videos[video_index].path:
+                temp_videos.append(self.videos[video_index])
             temp_video_indexes = []
             for video in temp_videos:
                 temp_video_indexes.append(video.video_index)
