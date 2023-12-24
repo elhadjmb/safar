@@ -3,23 +3,15 @@ from tkinter import messagebox
 
 import customtkinter as ctk  # Make sure customtkinter is installed
 
-from logic import Config
-
 
 class ConfigBackend:
-    def __init__(self, config_path="config.json"):
-        self.config_path = config_path
-        self.config = Config()
+    def __init__(self, config):
+        self.config = config
         self.detected_screens = []
-        self.load_config()
-
-    def load_config(self):
-        """Load configuration from the JSON file."""
-        self.config.load("config.json")
 
     def save_config(self):
         """Save the current configuration to the JSON file."""
-        self.config.save("config.json")
+        self.config.save()
 
     def detect_screens(self):
         """Detect and store available screens."""
@@ -49,8 +41,8 @@ class ConfigBackend:
 
 
 class ConfigGUI(ConfigBackend):
-    def __init__(self, root):
-        super().__init__()
+    def __init__(self, root, config):
+        super().__init__(config=config)
         self.root = root
         self.root.title("Screen Configuration")
         self.setup_widgets()
@@ -110,21 +102,20 @@ class ConfigGUI(ConfigBackend):
         for widget in self.config_screens_frame.winfo_children():
             widget.destroy()
 
+        # Display screens from config
         for i, screen in enumerate(self.config.screens):
-            config_frame = ctk.CTkFrame(self.config_screens_frame)
-            config_frame.pack(pady=2, fill="x", expand=True)
-            config_frame.grid_columnconfigure(1, weight=1)  # Ensure label expands
+            label = ctk.CTkLabel(self.config_screens_frame, text=f"Config Screen {i}: {screen.name}")
+            label.pack(side="left", padx=5)
 
-            label = ctk.CTkLabel(config_frame, text=f"Config Screen {i}: {screen.name}")
-            label.grid(row=0, column=0, sticky="w", padx=5)
+            screen_options = [f"Screen {j}" for j in range(len(self.detected_screens))]
+            screen_var = tk.StringVar(value=screen_options[0])
+            dropdown = ctk.CTkOptionMenu(self.config_screens_frame, variable=screen_var, values=screen_options)
+            dropdown.pack(side="left", padx=5)
 
-            screen_var = tk.StringVar(value=[f"Screen {j}" for j in range(len(self.detected_screens))][0])
-            dropdown = ctk.CTkOptionMenu(config_frame, variable=screen_var, values=screen_var.get())
-            dropdown.grid(row=0, column=1, padx=5)
-
-            remap_button = ctk.CTkButton(config_frame, text="Remap",
+            remap_button = ctk.CTkButton(self.config_screens_frame, text="Remap",
                                          command=lambda i=i, var=screen_var: self.remap_and_update(i, var))
-            remap_button.grid(row=0, column=2, padx=5)
+            remap_button.pack(side="left", padx=5)
+
     def remap_and_update(self, config_screen_id, screen_var):
         detected_screen_id = int(screen_var.get().split(" ")[1])
         self.remap_screen(config_screen_id, detected_screen_id)
@@ -133,9 +124,3 @@ class ConfigGUI(ConfigBackend):
     def on_save_config(self):
         self.save_config()
         messagebox.showinfo("Success", "Configuration Saved Successfully")
-
-
-# Create and run the GUI
-root = ctk.CTk()
-app = ConfigGUI(root)
-root.mainloop()
