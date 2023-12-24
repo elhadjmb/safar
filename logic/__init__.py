@@ -128,7 +128,8 @@ class Config:
                 "width": screen.width,
                 "height": screen.height,
                 "y": screen.y,
-                "x": screen.x
+                "x": screen.x,
+                "location": screen.location,
             })
 
         for video in self.videos:
@@ -167,7 +168,7 @@ class Config:
             self.key_sequence_map = config_dict["key_sequence_map"]
 
         for screen_dict in config_dict["screens"]:
-            self.screens.append(Screen(screen_dict["select_index"]))
+            self.screens.append(Screen(screen_dict["select_index"], screen_dict["location"]))
 
         for video_dict in config_dict["videos"]:
             v = Video(video_dict["path"], self.screens[video_dict["screen"]])

@@ -12,11 +12,17 @@ class ConfigBackend:
         for widget in self.screen_list_frame.winfo_children():
             widget.destroy()
         self.config.setup_screens()
+        self.screen_location_entries = {}  # Store the location entries for each screen
         for i, screen in enumerate(self.config.screens):
             screen_label = ctk.CTkLabel(self.screen_list_frame, text=f"Screen {i}: {screen.name}")
             screen_label.pack(pady=5, fill="x")
             blink_button = ctk.CTkButton(self.screen_list_frame, text="Blink", command=lambda s=screen: s.blink())
             blink_button.pack(pady=5)
+
+            # Add an entry widget for location input
+            location_entry = ctk.CTkEntry(self.screen_list_frame, placeholder_text="Enter Location")
+            location_entry.pack(pady=5, fill="x")
+            self.screen_location_entries[screen] = location_entry
 
     def add_video(self):
         filepath = filedialog.askopenfilename()
@@ -44,8 +50,15 @@ class ConfigBackend:
         self.config.setup_key_sequence_map(key, sequence_index)
         self.update_key_mapping_list()
 
+    def update_screen_locations(self):
+        """Update screen locations from the entry fields."""
+        for screen, entry in self.screen_location_entries.items():
+            location = entry.get()
+            screen.location = location  # Assuming 'location' is an attribute of Screen
+
     def save_config(self):
         try:
+            self.update_screen_locations()  # Update locations before saving
             self.config.save()
             messagebox.showinfo("Success", "Configuration Saved Successfully")
         except Exception as e:
