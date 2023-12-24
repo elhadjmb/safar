@@ -3,6 +3,8 @@ from tkinter import messagebox
 
 import customtkinter as ctk  # Make sure customtkinter is installed
 
+from logic import Screen
+
 
 class ScreenEditBackend:
     def __init__(self, config):
@@ -15,7 +17,7 @@ class ScreenEditBackend:
 
     def detect_screens(self):
         """Detect and store available screens."""
-        self.detected_screens = self.config.screens  # Replace with your actual screen detection logic
+        self.detected_screens = Screen.detect_monitors()
 
     def remap_screen(self, config_screen_id, detected_screen_id):
         """
