@@ -3,6 +3,7 @@ import json
 import customtkinter as ctk  # type: ignore
 
 from .edit import ScreenEditGUI
+from .setup import SetupGUI
 
 
 class KeyPressBackend:
@@ -35,18 +36,17 @@ class KeyPressBackend:
             self.status_bar.configure(text="Error parsing config file.")
             self.setup_button.configure(state='disabled')
 
-    def open_setup_window(self):
-        # Code to create and show a new setup window
-        # Create and run the GUI
+    def open_screenedit_window(self):
         root = ctk.CTk()
         app = ScreenEditGUI(root, self.player.config)
         root.mainloop()
-        # TODO: Add more setup components here as needed
-        # ctk.set_appearance_mode("dark")  # Set the theme of GUI
-        # root = ctk.CTk()
-        # root.title("Configuration Setup")
-        # app = SetupGUI(root, self.player.config)
-        # root.mainloop()
+
+    def open_setup_window(self):
+        ctk.set_appearance_mode("dark")  # Set the theme of GUI
+        root = ctk.CTk()
+        root.title("Configuration Setup")
+        app = SetupGUI(root, self.player.config)
+        root.mainloop()
 
     def update_key_function_map(self):
         self.key_function_map = self.player.create_key_function_map()
@@ -77,6 +77,7 @@ class KeyPressGUI(KeyPressBackend):
         self.create_mapping_frame()
         self.create_load_config_button()
         self.create_last_key_label()
+        self.create_screenedit_button()
         self.create_setup_button()
         self.create_kill_all_button()
         self.create_status_bar()
@@ -114,10 +115,15 @@ class KeyPressGUI(KeyPressBackend):
         self.status_bar = ctk.CTkLabel(self.root, text="", font=("Helvetica", 10))
         self.status_bar.grid(row=4, column=0, padx=10, pady=5, sticky="w")
 
-    def create_setup_button(self):
+    def create_screenedit_button(self):
         self.setup_button = ctk.CTkButton(self.root, text="Edit screens", state='disabled',
-                                          command=self.open_setup_window)
+                                          command=self.open_screenedit_window)
         self.setup_button.grid(row=5, column=0, padx=10, pady=10, sticky="ew")
+
+    def create_setup_button(self):
+        self.setup_button = ctk.CTkButton(self.root, text="Setup",
+                                          command=self.open_setup_window)
+        self.setup_button.grid(row=6, column=0, padx=10, pady=10, sticky="ew")
 
     def add_mapping_row(self, row, key, desc):
         ctk.CTkLabel(self.mapping_frame, text=key).grid(row=row, column=0, sticky='nsew')
@@ -132,4 +138,4 @@ class KeyPressGUI(KeyPressBackend):
 
     def create_kill_all_button(self):
         self.kill_all_button = ctk.CTkButton(self.root, text="Kill All", command=self.kill_all_videos, fg_color="red")
-        self.kill_all_button.grid(row=6, column=0, padx=10, pady=10, sticky="ew")
+        self.kill_all_button.grid(row=7, column=0, padx=10, pady=10, sticky="ew")

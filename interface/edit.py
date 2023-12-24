@@ -46,6 +46,7 @@ class ScreenEditGUI(ScreenEditBackend):
         self.root = root
         self.root.title("Screen Configuration")
         self.setup_widgets()
+        self.on_detect_screens()
 
     def setup_widgets(self):
         # Main frame with improved layout
