@@ -56,6 +56,29 @@ class SetupBackend:
             location = entry.get()
             screen.location = location  # Assuming 'location' is an attribute of Screen
 
+    def update_sequence_list(self):
+        for widget in self.sequence_list_frame.winfo_children():
+            widget.destroy()
+        for sequence in self.config.sequences:
+            sequence_label = ctk.CTkLabel(self.sequence_list_frame,
+                                          text=f"Sequence {sequence.sequence_index}: {sequence.description}")
+            sequence_label.pack(pady=5, fill="x")
+
+    def update_key_mapping_list(self):
+        for widget in self.key_mapping_list_frame.winfo_children():
+            widget.destroy()
+        for key, sequence_index in self.config.key_sequence_map.items():
+            mapping_label = ctk.CTkLabel(self.key_mapping_list_frame, text=f"Key '{key}' -> Sequence {sequence_index}")
+            mapping_label.pack(pady=5, fill="x")
+
+    def update_video_list(self):
+        for widget in self.video_list_frame.winfo_children():
+            widget.destroy()
+        for video in self.config.videos:
+            video_label = ctk.CTkLabel(self.video_list_frame,
+                                       text=f"Video {video.video_index}: {video.path} on Screen {video.monitor.select_index}")
+            video_label.pack(pady=5, fill="x")
+
     def save_config(self):
         try:
             self.update_screen_locations()  # Update locations before saving
@@ -138,14 +161,6 @@ class SetupGUI(SetupBackend):
         self.video_list_frame.grid(row=2, column=0, columnspan=3, sticky="nsew")
         self.update_video_list()
 
-    def update_video_list(self):
-        for widget in self.video_list_frame.winfo_children():
-            widget.destroy()
-        for video in self.config.videos:
-            video_label = ctk.CTkLabel(self.video_list_frame,
-                                       text=f"Video {video.video_index}: {video.path} on Screen {video.monitor.select_index}")
-            video_label.pack(pady=5, fill="x")
-
     def setup_sequence_section(self, parent):
         sequence_frame = self.setup_section_frame(parent, 2)
         ctk.CTkLabel(sequence_frame, text="Sequence Setup", font=("Arial", 12, "bold")).grid(row=0, column=0,
@@ -160,14 +175,6 @@ class SetupGUI(SetupBackend):
         self.sequence_list_frame = ctk.CTkFrame(parent)
         self.sequence_list_frame.grid(row=3, column=0, sticky='ew', padx=10)
         self.update_sequence_list()
-
-    def update_sequence_list(self):
-        for widget in self.sequence_list_frame.winfo_children():
-            widget.destroy()
-        for sequence in self.config.sequences:
-            sequence_label = ctk.CTkLabel(self.sequence_list_frame,
-                                          text=f"Sequence {sequence.sequence_index}: {sequence.description}")
-            sequence_label.pack(pady=5, fill="x")
 
     def setup_key_mapping_section(self, parent):
         key_mapping_frame = ctk.CTkFrame(parent)
@@ -188,13 +195,6 @@ class SetupGUI(SetupBackend):
         self.key_mapping_list_frame.grid(row=7, column=0, sticky='ew', padx=10)
 
         self.update_key_mapping_list()
-
-    def update_key_mapping_list(self):
-        for widget in self.key_mapping_list_frame.winfo_children():
-            widget.destroy()
-        for key, sequence_index in self.config.key_sequence_map.items():
-            mapping_label = ctk.CTkLabel(self.key_mapping_list_frame, text=f"Key '{key}' -> Sequence {sequence_index}")
-            mapping_label.pack(pady=5, fill="x")
 
     def setup_save_section(self, parent):
         save_frame = self.setup_section_frame(parent, 4)
