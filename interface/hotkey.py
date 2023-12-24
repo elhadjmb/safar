@@ -37,16 +37,12 @@ class KeyPressBackend:
             self.screenedit_button.configure(state='disabled')
 
     def open_screenedit_window(self):
-        root = ctk.CTk()
-        app = ScreenEditGUI(root, self.player.config)
-        root.mainloop()
+        self.screenedit_button.configure(state='disabled')
+        _ = ScreenEditGUI(self.player.config)
+
 
     def open_setup_window(self):
-        ctk.set_appearance_mode("dark")  # Set the theme of GUI
-        root = ctk.CTk()
-        root.title("Configuration Setup")
-        app = SetupGUI(root, self.player.config)
-        root.mainloop()
+        _ = SetupGUI(self.player.config)
 
     def update_key_function_map(self):
         self.key_function_map = self.player.create_key_function_map()

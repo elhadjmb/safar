@@ -41,12 +41,14 @@ class ScreenEditBackend:
 
 
 class ScreenEditGUI(ScreenEditBackend):
-    def __init__(self, root, config):
+    def __init__(self, config):
+        root = ctk.CTk()
         super().__init__(config=config)
         self.root = root
         self.root.title("Screen Configuration")
         self.setup_widgets()
         self.on_detect_screens()
+        self.root.mainloop()
 
     def setup_widgets(self):
         # Main frame with improved layout
@@ -124,4 +126,4 @@ class ScreenEditGUI(ScreenEditBackend):
 
     def on_save_config(self):
         self.save_config()
-        messagebox.showinfo("Success", "Configuration Saved Successfully")
+        self.root.destroy()

@@ -65,10 +65,13 @@ class SetupBackend:
 
 
 class SetupGUI(SetupBackend):
-    def __init__(self, root, config):
+    def __init__(self, config):
+        root = ctk.CTk()
+        root.title("Configuration Setup")
         super().__init__(root, config)
         self.root.geometry("600x800")
         self.setup_widgets()
+        self.root.mainloop()
 
     def setup_widgets(self):
         main_frame = ctk.CTkFrame(self.root)

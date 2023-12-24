@@ -46,7 +46,7 @@ def headless():
 
 
 def graphical():
-    gui = KeyPressGUI(Player(True))
+    _ = KeyPressGUI(Player(True))
 
 
 def main(headless):
