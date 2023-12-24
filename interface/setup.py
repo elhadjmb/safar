@@ -32,7 +32,7 @@ class SetupBackend:
             self.update_video_list()
 
     def add_sequence(self):
-        video_indexes = self.video_indexes_entry.get()
+        video_indexes = self.video_indices_var.get()
         description = self.sequence_description_entry.get()
         if video_indexes and description:
             try:
@@ -98,41 +98,30 @@ class SetupGUI(SetupBackend):
         self.root.mainloop()
 
     def setup_widgets(self):
+        # Main frame using grid layout
         main_frame = ctk.CTkFrame(self.root)
         main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        main_frame.grid_columnconfigure(0, weight=1)
+        main_frame.grid_rowconfigure(1, weight=1)
 
-        canvas = ctk.CTkCanvas(main_frame)
-        canvas.pack(side="left", fill="both", expand=True)
+        # Sections setup
+        self.setup_screen_section(main_frame)
+        self.setup_video_section(main_frame)
+        self.setup_sequence_section(main_frame)
+        self.setup_key_mapping_section(main_frame)
+        self.setup_save_section(main_frame)
 
-        scrollbar = ctk.CTkScrollbar(main_frame, command=canvas.yview)
-        scrollbar.pack(side="right", fill="y")
-
-        canvas.configure(yscrollcommand=scrollbar.set)
-        canvas.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-
-        content_frame = ctk.CTkFrame(canvas)
-        canvas.create_window((0, 0), window=content_frame, anchor="nw")
-
-        # Setup sections
-        self.setup_screen_section(content_frame)
-        self.setup_video_section(content_frame)
-        self.setup_sequence_section(content_frame)
-        self.setup_key_mapping_section(content_frame)
-        self.setup_save_section(content_frame)
-
-        # Configure grid for content_frame to expand elements
-        content_frame.grid_columnconfigure(0, weight=1)
-        for i in range(5):
-            content_frame.grid_rowconfigure(i, weight=1)
-
-    def setup_section_frame(self, parent, row):
+    def setup_section_frame(self, parent, row, title):
+        # Section frame
         section_frame = ctk.CTkFrame(parent)
         section_frame.grid(row=row, column=0, sticky="nsew", padx=10, pady=10)
         section_frame.grid_columnconfigure(1, weight=1)
-        return section_frame
 
+        # Section title
+        ctk.CTkLabel(section_frame, text=title, font=("Arial", 12, "bold")).grid(row=0, column=0, sticky="w")
+        return section_frame
     def setup_screen_section(self, parent):
-        screen_frame = self.setup_section_frame(parent, 0)
+        screen_frame = self.setup_section_frame(parent, 0, "")
         ctk.CTkLabel(screen_frame, text="Screen Setup", font=("Arial", 12, "bold")).grid(row=0, column=0, sticky="w")
         ctk.CTkButton(screen_frame, text="Detect Screens", command=self.detect_screens).grid(row=0, column=1,
                                                                                              sticky="e")
@@ -141,7 +130,7 @@ class SetupGUI(SetupBackend):
         self.detect_screens()
 
     def setup_video_section(self, parent):
-        video_frame = self.setup_section_frame(parent, 1)
+        video_frame = self.setup_section_frame(parent, 1, "")
         ctk.CTkLabel(video_frame, text="Video Setup", font=("Arial", 12, "bold")).grid(row=0, column=0, sticky="w")
 
         # Dropdown for screen index
@@ -162,7 +151,7 @@ class SetupGUI(SetupBackend):
         self.update_video_list()
 
     def setup_sequence_section(self, parent):
-        sequence_frame = self.setup_section_frame(parent, 2)
+        sequence_frame = self.setup_section_frame(parent, 2, "")
         ctk.CTkLabel(sequence_frame, text="Sequence Setup", font=("Arial", 12, "bold")).grid(row=0, column=0,
                                                                                              sticky='w')
         self.video_indexes_entry = ctk.CTkEntry(sequence_frame,
@@ -197,5 +186,5 @@ class SetupGUI(SetupBackend):
         self.update_key_mapping_list()
 
     def setup_save_section(self, parent):
-        save_frame = self.setup_section_frame(parent, 4)
-        ctk.CTkButton(save_frame, text="Save Configuration", command=self.save_config).grid(row=0, column=0, sticky='e')
+        save_frame = self.setup_section_frame(parent, 4, "")
+        ctk.CTkButton(save_frame, text="Save Configuration", command=self.save_config).grid(row=1, column=0, sticky='e')
