@@ -151,18 +151,23 @@ class SetupGUI(SetupBackend):
         self.update_video_list()
 
     def setup_sequence_section(self, parent):
-        sequence_frame = self.setup_section_frame(parent, 2, "")
-        ctk.CTkLabel(sequence_frame, text="Sequence Setup", font=("Arial", 12, "bold")).grid(row=0, column=0,
-                                                                                             sticky='w')
-        self.video_indexes_entry = ctk.CTkEntry(sequence_frame,
-                                                placeholder_text="Enter Video Indexes (comma-separated)")
-        self.video_indexes_entry.grid(row=0, column=1, sticky='ew', padx=5)
-        self.sequence_description_entry = ctk.CTkEntry(sequence_frame, placeholder_text="Enter Sequence Description")
-        self.sequence_description_entry.grid(row=0, column=2, sticky='ew', padx=5)
-        ctk.CTkButton(sequence_frame, text="Add Sequence", command=self.add_sequence).grid(row=0, column=3, sticky='e')
+        sequence_frame = self.setup_section_frame(parent, 2, "Sequence Setup")
 
-        self.sequence_list_frame = ctk.CTkFrame(parent)
-        self.sequence_list_frame.grid(row=3, column=0, sticky='ew', padx=10)
+        ctk.CTkLabel(sequence_frame, text="Enter Video Indexes (comma-separated):").grid(row=1, column=0, sticky='w',
+                                                                                         padx=5)
+        self.video_indexes_entry = ctk.CTkEntry(sequence_frame)
+        self.video_indexes_entry.grid(row=1, column=1, sticky='ew', padx=5)
+
+        ctk.CTkLabel(sequence_frame, text="Sequence Description:").grid(row=1, column=2, sticky='w', padx=5)
+        self.sequence_description_entry = ctk.CTkEntry(sequence_frame)
+        self.sequence_description_entry.grid(row=1, column=3, sticky='ew', padx=5)
+
+        add_sequence_button = ctk.CTkButton(sequence_frame, text="Add Sequence", command=self.add_sequence)
+        add_sequence_button.grid(row=1, column=4, sticky='e', padx=5)
+
+        # Frame for listing sequences
+        self.sequence_list_frame = ctk.CTkFrame(sequence_frame)
+        self.sequence_list_frame.grid(row=2, column=0, columnspan=5, sticky='ew', padx=10)
         self.update_sequence_list()
 
     def setup_key_mapping_section(self, parent):
