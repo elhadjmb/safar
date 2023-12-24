@@ -1,3 +1,4 @@
+import tkinter as tk
 from tkinter import filedialog, messagebox
 
 import customtkinter as ctk  # type: ignore
@@ -25,7 +26,7 @@ class SetupBackend:
 
     def add_video(self):
         filepath = filedialog.askopenfilename()
-        screen_index = int(self.screen_index_entry.get())
+        screen_index = int(self.screen_index_var.get())
         if filepath:
             self.config.setup_video(filepath, screen_index)
             self.update_video_list()
@@ -114,19 +115,28 @@ class SetupGUI(SetupBackend):
                                                                                              sticky="e")
         self.screen_list_frame = ctk.CTkFrame(screen_frame)
         self.screen_list_frame.grid(row=1, column=0, columnspan=2, sticky="nsew")
+        self.detect_screens()
 
     def setup_video_section(self, parent):
         video_frame = self.setup_section_frame(parent, 1)
         ctk.CTkLabel(video_frame, text="Video Setup", font=("Arial", 12, "bold")).grid(row=0, column=0, sticky="w")
 
-        self.screen_index_entry = ctk.CTkEntry(video_frame, placeholder_text="Enter Screen Index")
-        self.screen_index_entry.grid(row=1, column=1, sticky='ew', padx=5)
+        # Dropdown for screen index
+        self.screen_index_var = tk.StringVar()
+        screen_indices = [f"{i}" for i in [screen.select_index for screen in self.config.screens]]
+        if screen_indices:
+            self.screen_index_var.set(screen_indices[0])  # Default value
+        self.screen_index_dropdown = ctk.CTkOptionMenu(video_frame, variable=self.screen_index_var,
+                                                       values=screen_indices)
+        self.screen_index_dropdown.grid(row=1, column=1, sticky='ew', padx=5)
 
+        # Add Video button
         add_video_button = ctk.CTkButton(video_frame, text="Add Video", command=self.add_video)
         add_video_button.grid(row=1, column=2, sticky='e', padx=5)
 
         self.video_list_frame = ctk.CTkFrame(video_frame)
         self.video_list_frame.grid(row=2, column=0, columnspan=3, sticky="nsew")
+        self.update_video_list()
 
     def update_video_list(self):
         for widget in self.video_list_frame.winfo_children():
@@ -149,6 +159,7 @@ class SetupGUI(SetupBackend):
 
         self.sequence_list_frame = ctk.CTkFrame(parent)
         self.sequence_list_frame.grid(row=3, column=0, sticky='ew', padx=10)
+        self.update_sequence_list()
 
     def update_sequence_list(self):
         for widget in self.sequence_list_frame.winfo_children():
@@ -175,6 +186,8 @@ class SetupGUI(SetupBackend):
 
         self.key_mapping_list_frame = ctk.CTkFrame(parent)
         self.key_mapping_list_frame.grid(row=7, column=0, sticky='ew', padx=10)
+
+        self.update_key_mapping_list()
 
     def update_key_mapping_list(self):
         for widget in self.key_mapping_list_frame.winfo_children():
