@@ -27,14 +27,14 @@ class KeyPressBackend:
         try:
             self.player.load_config()
             self.update_key_function_map()
-            self.setup_button.configure(state='normal')  # Enable the button after successful load
+            self.screenedit_button.configure(state='normal')  # Enable the button after successful load
             self.status_bar.configure(text="Config loaded successfully.")
         except FileNotFoundError:
             self.status_bar.configure(text="Config file not found.")
-            self.setup_button.configure(state='disabled')
+            self.screenedit_button.configure(state='disabled')
         except json.JSONDecodeError:
             self.status_bar.configure(text="Error parsing config file.")
-            self.setup_button.configure(state='disabled')
+            self.screenedit_button.configure(state='disabled')
 
     def open_screenedit_window(self):
         root = ctk.CTk()
@@ -116,9 +116,9 @@ class KeyPressGUI(KeyPressBackend):
         self.status_bar.grid(row=4, column=0, padx=10, pady=5, sticky="w")
 
     def create_screenedit_button(self):
-        self.setup_button = ctk.CTkButton(self.root, text="Edit screens", state='disabled',
+        self.screenedit_button = ctk.CTkButton(self.root, text="Edit screens", state='disabled',
                                           command=self.open_screenedit_window)
-        self.setup_button.grid(row=5, column=0, padx=10, pady=10, sticky="ew")
+        self.screenedit_button.grid(row=5, column=0, padx=10, pady=10, sticky="ew")
 
     def create_setup_button(self):
         self.setup_button = ctk.CTkButton(self.root, text="Setup",
