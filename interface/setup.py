@@ -1,4 +1,4 @@
-from tkinter import filedialog, simpledialog, messagebox
+from tkinter import filedialog, messagebox
 
 import customtkinter as ctk  # type: ignore
 
@@ -25,8 +25,8 @@ class SetupBackend:
 
     def add_video(self):
         filepath = filedialog.askopenfilename()
+        screen_index = int(self.screen_index_entry.get())
         if filepath:
-            screen_index = simpledialog.askinteger("Input", "Enter Screen Index")
             self.config.setup_video(filepath, screen_index)
             self.update_video_list()
 
@@ -118,9 +118,15 @@ class SetupGUI(SetupBackend):
     def setup_video_section(self, parent):
         video_frame = self.setup_section_frame(parent, 1)
         ctk.CTkLabel(video_frame, text="Video Setup", font=("Arial", 12, "bold")).grid(row=0, column=0, sticky="w")
-        ctk.CTkButton(video_frame, text="Add Video", command=self.add_video).grid(row=0, column=1, sticky="e")
+
+        self.screen_index_entry = ctk.CTkEntry(video_frame, placeholder_text="Enter Screen Index")
+        self.screen_index_entry.grid(row=1, column=1, sticky='ew', padx=5)
+
+        add_video_button = ctk.CTkButton(video_frame, text="Add Video", command=self.add_video)
+        add_video_button.grid(row=1, column=2, sticky='e', padx=5)
+
         self.video_list_frame = ctk.CTkFrame(video_frame)
-        self.video_list_frame.grid(row=1, column=0, columnspan=2, sticky="nsew")
+        self.video_list_frame.grid(row=2, column=0, columnspan=3, sticky="nsew")
 
     def update_video_list(self):
         for widget in self.video_list_frame.winfo_children():
